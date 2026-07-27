@@ -1,50 +1,134 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import type { Plant } from '../types/plant';
 
 type TodayCardProps = {
   plant?: Plant;
   onWater: (plant: Plant) => void;
+  isWatering: boolean;
 };
+
+function getOverdueLabel(statusText: string) {
+  const days = Number.parseInt(statusText, 10);
+
+  if (!Number.isInteger(days)) {
+    return '물주기가 늦었어요';
+  }
+
+  if (days === 1) {
+    return '하루 늦었어요';
+  }
+
+  return `${days}일 늦었어요`;
+}
 
 export default function TodayCard({
   plant,
   onWater,
+  isWatering,
 }: TodayCardProps) {
   if (!plant) {
     return (
       <View style={styles.emptyCard}>
         <Text style={styles.emptyEmoji}>🌿</Text>
-        <Text style={styles.emptyTitle}>오늘은 모두 괜찮아요</Text>
+
+        <Text style={styles.emptyTitle}>
+          오늘은 모두 괜찮아요
+        </Text>
+
         <Text style={styles.emptyText}>
-          지금 물을 줘야 하는 식물이 없어요.
+          지금 바로 물을 줘야 하는 식물이 없어요.
         </Text>
       </View>
     );
   }
 
+  const isOverdue = plant.status === 'overdue';
+
+  const featuredLabel = isOverdue
+    ? '물을 기다리고 있어요'
+    : '오늘 물을 주세요';
+
+  const statusLabel = isOverdue
+    ? `⚠️ ${getOverdueLabel(plant.statusText)}`
+    : '오늘 물 주는 날';
+
   return (
-    <View style={styles.featuredCard}>
-      <View style={styles.featuredIcon}>
-        <Text style={styles.featuredEmoji}>{plant.emoji}</Text>
+    <View
+      style={[
+        styles.featuredCard,
+        isOverdue && styles.overdueCard,
+      ]}
+    >
+      <View
+        style={[
+          styles.featuredIcon,
+          isOverdue && styles.overdueIcon,
+        ]}
+      >
+        <Text style={styles.featuredEmoji}>
+          {plant.emoji}
+        </Text>
       </View>
 
-      <Text style={styles.featuredLabel}>물 줄 시간이에요</Text>
-      <Text style={styles.featuredName}>{plant.name}</Text>
-      <Text style={styles.featuredType}>{plant.typeName}</Text>
+      <Text
+        style={[
+          styles.featuredLabel,
+          isOverdue && styles.overdueLabel,
+        ]}
+      >
+        {featuredLabel}
+      </Text>
 
-      <View style={styles.statusBadge}>
-        <Text style={styles.statusBadgeText}>{plant.statusText}</Text>
+      <Text style={styles.featuredName}>
+        {plant.name}
+      </Text>
+
+      <Text style={styles.featuredType}>
+        {plant.typeName}
+      </Text>
+
+      <View
+        style={[
+          styles.statusBadge,
+          isOverdue && styles.overdueBadge,
+        ]}
+      >
+        <Text
+          style={[
+            styles.statusBadgeText,
+            isOverdue &&
+              styles.overdueBadgeText,
+          ]}
+        >
+          {statusLabel}
+        </Text>
       </View>
 
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${plant.name}에게 물주기`}
+        disabled={isWatering}
         onPress={() => onWater(plant)}
         style={({ pressed }) => [
           styles.waterButton,
-          pressed && styles.waterButtonPressed,
+          isOverdue && styles.overdueWaterButton,
+          isWatering && styles.waterButtonDisabled,
+          pressed &&
+            !isWatering &&
+            styles.waterButtonPressed,
         ]}
       >
-        <Text style={styles.waterButtonText}>💧 물 줬어요</Text>
+        <Text style={styles.waterButtonText}>
+          {isWatering
+            ? '기록하고 있어요...'
+            : '💧 물 줬어요'}
+        </Text>
       </Pressable>
     </View>
   );
@@ -60,14 +144,22 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
   },
 
+  overdueCard: {
+    backgroundColor: '#F3DDD5',
+  },
+
   featuredIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
     width: 112,
     height: 112,
-    borderRadius: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#F8FBF5',
+    borderRadius: 56,
     marginBottom: 20,
+  },
+
+  overdueIcon: {
+    backgroundColor: '#FFF8F4',
   },
 
   featuredEmoji: {
@@ -78,6 +170,10 @@ const styles = StyleSheet.create({
     color: '#65745F',
     fontSize: 14,
     fontWeight: '700',
+  },
+
+  overdueLabel: {
+    color: '#9A5146',
   },
 
   featuredName: {
@@ -101,10 +197,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 
+  overdueBadge: {
+    backgroundColor: '#FFF5F1',
+  },
+
   statusBadgeText: {
     color: '#52654C',
     fontSize: 13,
     fontWeight: '800',
+  },
+
+  overdueBadgeText: {
+    color: '#A34F42',
   },
 
   waterButton: {
@@ -114,6 +218,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginTop: 24,
     paddingVertical: 16,
+  },
+
+  overdueWaterButton: {
+    backgroundColor: '#8E493F',
+  },
+
+  waterButtonDisabled: {
+    opacity: 0.55,
   },
 
   waterButtonPressed: {
@@ -149,6 +261,8 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#7B8477',
     fontSize: 14,
+    lineHeight: 21,
     marginTop: 7,
+    textAlign: 'center',
   },
 });

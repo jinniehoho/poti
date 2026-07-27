@@ -23,6 +23,7 @@ import {
   deletePlant,
   getPlantById,
 } from '../../services/plantService';
+import { getWateringHistory } from '../../services/wateringService';
 
 type PlantDetail = {
   plant_id: number;
@@ -36,11 +37,19 @@ type PlantDetail = {
   days_until_watering: number;
 };
 
+type WateringHistory = {
+  id: number;
+  watered_at: string;
+};
+
 export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { refreshPlants } = usePlants();
 
   const [plant, setPlant] = useState<PlantDetail | null>(null);
+  const [history, setHistory] = useState<
+  WateringHistory[]
+    >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] =
     useState<string | null>(null);
@@ -66,7 +75,12 @@ export default function PlantDetailScreen() {
 
         const result = await getPlantById(plantId);
 
+        const wateringHistory =
+            await getWateringHistory(plantId);
+
         setPlant(result as PlantDetail);
+        setHistory(wateringHistory);
+
       } catch (error) {
         console.error('식물 상세 조회 실패:', error);
         setLoadError('식물 정보를 불러오지 못했어요.');
@@ -85,6 +99,29 @@ export default function PlantDetailScreen() {
 
     return new Date(date).toLocaleDateString('ko-KR');
   };
+
+  const formatHistoryDate = (
+  date: string,
+) => {
+  const historyDate = new Date(date);
+  const today = new Date();
+
+  const isToday =
+    historyDate.toDateString() ===
+    today.toDateString();
+
+  if (isToday) {
+    return '오늘';
+  }
+
+  return historyDate.toLocaleDateString(
+    'ko-KR',
+    {
+      month: 'long',
+      day: 'numeric',
+    },
+  );
+};
 
   if (isLoading) {
     return (
@@ -182,6 +219,33 @@ export default function PlantDetailScreen() {
           lastWateredLabel={formatDate(plant.last_watered_at)}
           nextWateringLabel={formatDate(plant.next_watering_at)}
         />
+        
+        <View style={styles.historyCard}>
+  <Text style={styles.historyTitle}>
+    최근 물 준 기록
+  </Text>
+
+  {history.length === 0 ? (
+    <Text style={styles.historyEmpty}>
+      아직 물 준 기록이 없어요.
+    </Text>
+  ) : (
+    history.slice(0, 5).map((item) => (
+      <View
+        key={item.id}
+        style={styles.historyRow}
+      >
+        <Text style={styles.historyEmoji}>
+          💧
+        </Text>
+
+        <Text style={styles.historyDate}>
+          {formatHistoryDate(item.watered_at)}
+        </Text>
+      </View>
+    ))
+  )}
+</View>
 
         <PlantActionButtons
           onEdit={handleEdit}
@@ -376,4 +440,40 @@ const styles = StyleSheet.create({
   pressedButton: {
     opacity: 0.72,
   },
+
+  historyCard: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 24,
+  marginTop: 20,
+  padding: 22,
+},
+
+historyTitle: {
+  color: '#263125',
+  fontSize: 18,
+  fontWeight: '800',
+},
+
+historyEmpty: {
+  color: '#8A9384',
+  fontSize: 14,
+  marginTop: 16,
+},
+
+historyRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 16,
+},
+
+historyEmoji: {
+  fontSize: 18,
+},
+
+historyDate: {
+  color: '#52654C',
+  fontSize: 15,
+  fontWeight: '700',
+  marginLeft: 10,
+},
 });

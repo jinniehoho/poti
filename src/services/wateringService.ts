@@ -37,3 +37,21 @@ export async function deleteWateringRecord(
     throw error;
   }
 }
+
+export async function getWateringHistory(
+  plantId: number,
+) {
+  const { data, error } = await supabase
+    .from('watering_history')
+    .select('id, watered_at')
+    .eq('plant_id', plantId)
+    .order('watered_at', {
+      ascending: false,
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
