@@ -2,42 +2,19 @@ import {
   createContext,
   type ReactNode,
   useContext,
+  useEffect,
   useState,
 } from 'react';
 
+import { getPlants } from '../services/plantService';
 import type { Plant } from '../types/plant';
-
-const initialPlants: Plant[] = [
-  {
-    id: 1,
-    name: '초록이',
-    typeName: '몬스테라',
-    emoji: '🌿',
-    status: 'not_due',
-    statusText: '7일 후',
-  },
-  {
-    id: 2,
-    name: '튼튼이',
-    typeName: '산세베리아',
-    emoji: '🪴',
-    status: 'due_today',
-    statusText: '오늘',
-  },
-  {
-    id: 3,
-    name: '덩굴이',
-    typeName: '스킨답서스',
-    emoji: '🌱',
-    status: 'not_due',
-    statusText: '7일 후',
-  },
-];
 
 type PlantContextValue = {
   plants: Plant[];
   setPlants: React.Dispatch<React.SetStateAction<Plant[]>>;
   addPlant: (plant: Plant) => void;
+  isLoadingPlants: boolean;
+  plantsError: string | null;
 };
 
 const PlantContext = createContext<PlantContextValue | undefined>(
@@ -51,7 +28,33 @@ type PlantProviderProps = {
 export function PlantProvider({
   children,
 }: PlantProviderProps) {
-  const [plants, setPlants] = useState<Plant[]>(initialPlants);
+  const [plants, setPlants] = useState<Plant[]>([]);
+  const [isLoadingPlants, setIsLoadingPlants] = useState(true);
+  const [plantsError, setPlantsError] =
+    useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadPlants() {
+      try {
+        setIsLoadingPlants(true);
+        setPlantsError(null);
+
+        const savedPlants = await getPlants();
+
+        setPlants(savedPlants);
+      } catch (error) {
+        console.error('식물 목록 조회 실패:', error);
+
+        setPlantsError(
+          '식물 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+        );
+      } finally {
+        setIsLoadingPlants(false);
+      }
+    }
+
+    loadPlants();
+  }, []);
 
   const addPlant = (plant: Plant) => {
     setPlants((currentPlants) => [
@@ -66,6 +69,8 @@ export function PlantProvider({
         plants,
         setPlants,
         addPlant,
+        isLoadingPlants,
+        plantsError,
       }}
     >
       {children}
