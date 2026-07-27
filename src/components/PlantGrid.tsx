@@ -5,6 +5,8 @@ import {
   View,
 } from 'react-native';
 
+import { router } from 'expo-router';
+
 import type { Plant } from '../types/plant';
 
 type PlantGridProps = {
@@ -25,26 +27,35 @@ export default function PlantGrid({
 
       <View style={styles.plantRow}>
         {plants.map((plant) => (
-          <View key={plant.id} style={styles.plantItem}>
-            <View style={styles.plantCircle}>
-              <Text style={styles.plantEmoji}>{plant.emoji}</Text>
-            </View>
+      <Pressable
+        key={plant.id}
+        accessibilityRole="button"
+        accessibilityLabel={`${plant.name} 상세 정보 열기`}
+        onPress={() => router.push(`/plant/${plant.id}`)}
+        style={({ pressed }) => [
+        styles.plantItem,
+        pressed && styles.plantItemPressed,
+    ]}
+  >
+      <View style={styles.plantCircle}>
+        <Text style={styles.plantEmoji}>{plant.emoji}</Text>
+      </View>
 
-            <Text
-              numberOfLines={1}
-              style={styles.plantName}
-            >
-              {plant.name}
-            </Text>
+      <Text
+        numberOfLines={1}
+        style={styles.plantName}
+      >
+        {plant.name}
+      </Text>
 
-            <Text
-              numberOfLines={1}
-              style={styles.plantStatus}
-            >
-              {plant.statusText}
-            </Text>
-          </View>
-        ))}
+      <Text
+        numberOfLines={1}
+        style={styles.plantStatus}
+      >
+        {plant.statusText}
+      </Text>
+    </Pressable>
+))}
 
         <Pressable
           accessibilityRole="button"
@@ -99,6 +110,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 6,
     marginBottom: 20,
+  },
+  
+  plantItemPressed: {
+  opacity: 0.65,
   },
 
   plantCircle: {
