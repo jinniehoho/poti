@@ -13,6 +13,7 @@ type PlantContextValue = {
   plants: Plant[];
   setPlants: React.Dispatch<React.SetStateAction<Plant[]>>;
   addPlant: (plant: Plant) => void;
+  refreshPlants: () => Promise<void>;
   isLoadingPlants: boolean;
   plantsError: string | null;
 };
@@ -33,27 +34,27 @@ export function PlantProvider({
   const [plantsError, setPlantsError] =
     useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadPlants() {
-      try {
-        setIsLoadingPlants(true);
-        setPlantsError(null);
+  const refreshPlants = async () => {
+    try {
+      setIsLoadingPlants(true);
+      setPlantsError(null);
 
-        const savedPlants = await getPlants();
+      const savedPlants = await getPlants();
 
-        setPlants(savedPlants);
-      } catch (error) {
-        console.error('식물 목록 조회 실패:', error);
+      setPlants(savedPlants);
+    } catch (error) {
+      console.error('식물 목록 조회 실패:', error);
 
-        setPlantsError(
-          '식물 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
-        );
-      } finally {
-        setIsLoadingPlants(false);
-      }
+      setPlantsError(
+        '식물 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+      );
+    } finally {
+      setIsLoadingPlants(false);
     }
+  };
 
-    loadPlants();
+  useEffect(() => {
+    void refreshPlants();
   }, []);
 
   const addPlant = (plant: Plant) => {
@@ -69,6 +70,7 @@ export function PlantProvider({
         plants,
         setPlants,
         addPlant,
+        refreshPlants,
         isLoadingPlants,
         plantsError,
       }}

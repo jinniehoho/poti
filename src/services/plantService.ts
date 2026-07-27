@@ -18,20 +18,13 @@ type CreatedPlantRow = {
   is_active: boolean;
 };
 
-type PlantWithTypeRow = {
-  id: number;
+type PlantWateringStatusRow = {
+  plant_id: number;
   display_name: string;
-  watering_mode: 'automatic' | 'custom';
-  custom_interval_days: number | null;
-
-  plant_types: {
-    emoji: string;
-    default_interval_days: number;
-
-    plant_type_translations: {
-      name: string;
-    }[];
-  };
+  plant_type_name: string;
+  emoji: string;
+  days_until_watering: number;
+  watering_status: 'overdue' | 'due_today' | 'not_due';
 };
 
 export async function createPlant(
@@ -57,26 +50,16 @@ export async function createPlant(
 
 export async function getPlants(): Promise<Plant[]> {
   const { data, error } = await supabase
-    .from('plants')
+    .from('v_plant_watering_status')
     .select(`
-      id,
+      plant_id,
       display_name,
-      watering_mode,
-      custom_interval_days,
-      plant_types!inner (
-        emoji,
-        default_interval_days,
-        plant_type_translations!inner (
-          name
-        )
-      )
+      plant_type_name,
+      emoji,
+      days_until_watering,
+      watering_status
     `)
-    .eq('is_active', true)
-    .eq(
-      'plant_types.plant_type_translations.language_code',
-      'ko',
-    )
-    .order('created_at', {
+    .order('next_watering_at', {
       ascending: true,
     });
 
@@ -84,24 +67,26 @@ export async function getPlants(): Promise<Plant[]> {
     throw error;
   }
 
-  const rows = (data ?? []) as unknown as PlantWithTypeRow[];
+  const rows = (data ?? []) as PlantWateringStatusRow[];
 
   return rows.map((row) => {
-    const intervalDays =
-      row.watering_mode === 'custom'
-        ? row.custom_interval_days ??
-          row.plant_types.default_interval_days
-        : row.plant_types.default_interval_days;
+    let statusText: string;
+
+    if (row.days_until_watering < 0) {
+      statusText = `${Math.abs(row.days_until_watering)}일 지남`;
+    } else if (row.days_until_watering === 0) {
+      statusText = '오늘';
+    } else {
+      statusText = `${row.days_until_watering}일 후`;
+    }
 
     return {
-      id: row.id,
+      id: row.plant_id,
       name: row.display_name,
-      typeName:
-        row.plant_types.plant_type_translations[0]?.name ??
-        '식물',
-      emoji: row.plant_types.emoji,
-      status: 'not_due',
-      statusText: `${intervalDays}일 후`,
+      typeName: row.plant_type_name,
+      emoji: row.emoji,
+      status: row.watering_status,
+      statusText,
     };
   });
 }

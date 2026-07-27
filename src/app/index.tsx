@@ -24,48 +24,32 @@ import {
 
 import type { Plant } from '../types/plant';
 
+import {
+  addWateringRecord,
+  deleteWateringRecord,
+} from '../services/wateringService';
+
 const BRAND_NAME = 'Poti';
 
 export default function HomeScreen() {
-    const { plants, setPlants } = usePlants();
+    const {
+    plants,
+    setPlants,
+    refreshPlants,
+    } = usePlants();
     const [message, setMessage] = useState<string | null>(null);
     const [lastWateredPlant, setLastWateredPlant] = useState<Plant | null>(null);
+    const [lastWateringRecordId, setLastWateringRecordId] = useState<number | null>(null);
+
+const [isWatering, setIsWatering] = useState(false);
     const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
       const duePlants = plants.filter(
     (plant) =>
       plant.status === 'due_today' || plant.status === 'overdue',
   );
   const featuredPlant = duePlants[0];
-  const handleWaterPlant = (plant: Plant) => {
-    setLastWateredPlant(plant);
-
-    setPlants((currentPlants) =>
-      currentPlants.map((currentPlant) =>
-        currentPlant.id === plant.id
-          ? {
-              ...currentPlant,
-              status: 'not_due',
-              statusText: '7일 후',
-            }
-          : currentPlant,
-      ),
-    );
-
-  setMessage(`${plant.name}의 물주기를 기록했어요.`);
-
-  if (messageTimer.current) {
-  clearTimeout(messageTimer.current);
-}
-
-messageTimer.current = setTimeout(() => {
-  setMessage(null);
-  setLastWateredPlant(null);
-  messageTimer.current = null;
-}, 5000);
-  };
-
-  const handleUndo = () => {
-  if (!lastWateredPlant) {
+  const handleWaterPlant = async (plant: Plant) => {
+  if (isWatering) {
     return;
   }
 
@@ -74,21 +58,76 @@ messageTimer.current = setTimeout(() => {
     messageTimer.current = null;
   }
 
-  setPlants((currentPlants) =>
-    currentPlants.map((plant) =>
-      plant.id === lastWateredPlant.id
-        ? lastWateredPlant
-        : plant,
-    ),
-  );
+  try {
+    setIsWatering(true);
 
-  setMessage('물주기 기록을 취소했어요.');
-  setLastWateredPlant(null);
+    const wateringRecord =
+      await addWateringRecord(plant.id);
 
-  messageTimer.current = setTimeout(() => {
-    setMessage(null);
+    setLastWateredPlant(plant);
+    setLastWateringRecordId(wateringRecord.id);
+
+    await refreshPlants();
+
+    setMessage(`${plant.name}에게 물을 줬어요.`);
+
+    messageTimer.current = setTimeout(() => {
+      setMessage(null);
+      messageTimer.current = null;
+    }, 5000);
+  } catch (error) {
+    console.error('물주기 기록 실패:', error);
+
+    setMessage(
+      '물주기를 기록하지 못했어요. 다시 시도해주세요.',
+    );
+
+    messageTimer.current = setTimeout(() => {
+      setMessage(null);
+      messageTimer.current = null;
+    }, 5000);
+  } finally {
+    setIsWatering(false);
+  }
+};
+
+  const handleUndo = async () => {
+  if (
+    !lastWateredPlant ||
+    lastWateringRecordId === null
+  ) {
+    return;
+  }
+
+  if (messageTimer.current) {
+    clearTimeout(messageTimer.current);
     messageTimer.current = null;
-  }, 2000);
+  }
+
+  try {
+    await deleteWateringRecord(lastWateringRecordId);
+
+    await refreshPlants();
+
+    setLastWateringRecordId(null);
+    setLastWateredPlant(null);
+
+    setMessage(null);
+  } catch (error) {
+    console.error(
+      '물주기 실행 취소 실패:',
+      error,
+    );
+
+    setMessage(
+      '실행 취소에 실패했어요.'
+    );
+
+    messageTimer.current = setTimeout(() => {
+      setMessage(null);
+      messageTimer.current = null;
+    }, 3000);
+  }
 };
 
 const handleAddPlant = () => {

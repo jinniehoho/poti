@@ -27,3 +27,21 @@ END;
 SELECT *
 FROM plants;
 
+-- 물주기 기록 확인
+SELECT *
+FROM watering_history
+ORDER BY watered_at DESC;
+
+
+-- 식물별 물주기 상태 확인
+SELECT
+    plant_id,
+    display_name,
+    plant_type_name,
+    interval_days,
+    last_watered_at,
+    next_watering_at,
+    days_until_watering,
+    watering_status
+FROM v_plant_watering_status
+ORDER BY next_watering_at;
