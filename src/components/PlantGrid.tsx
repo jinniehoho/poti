@@ -1,64 +1,126 @@
+import {
+  useMemo,
+  type RefObject,
+} from 'react';
 import { router } from 'expo-router';
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
+  type ViewStyle,
 } from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
 
+import {
+  useTheme,
+  type AppTheme,
+} from '../theme';
 import type { Plant } from '../types/plant';
+import { useLanguage } from '../preferences/LanguageContext';
+import { getPlantIllustration } from '../../assets/assets';
+
+import PlantVisual from './PlantVisual';
 
 type PlantGridProps = {
   plants: Plant[];
   onAddPlant: () => void;
+  addPlantRef?: RefObject<View | null>;
 };
 
-function getPlantStatusLabel(plant: Plant) {
-  const days = Number.parseInt(
-    plant.statusText,
-    10,
-  );
-
-  if (plant.status === 'due_today') {
-    return '오늘 물 주세요';
-  }
-
-  if (plant.status === 'overdue') {
-    if (!Number.isInteger(days)) {
-      return '물주기가 늦었어요';
-    }
-
-    if (days === 1) {
-      return '하루 늦었어요';
-    }
-
-    return `${days}일 늦었어요`;
-  }
-
-  if (!Number.isInteger(days)) {
-    return plant.statusText;
-  }
-
-  if (days === 1) {
-    return '내일 물 주는 날';
-  }
-
-  return `${days}일 남았어요`;
-}
+const BLOB_SHAPES: ViewStyle[] = [
+  {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 22,
+  },
+  {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 30,
+    borderBottomRightRadius: 22,
+    borderBottomLeftRadius: 28,
+  },
+  {
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 24,
+    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 27,
+  },
+  {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 28,
+    borderBottomRightRadius: 29,
+    borderBottomLeftRadius: 19,
+  },
+  {
+    borderTopLeftRadius: 27,
+    borderTopRightRadius: 19,
+    borderBottomRightRadius: 25,
+    borderBottomLeftRadius: 30,
+  },
+];
 
 export default function PlantGrid({
   plants,
   onAddPlant,
+  addPlantRef,
 }: PlantGridProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
+  const getPlantStatusLabel = (plant: Plant) => {
+    const days = Number.parseInt(
+      plant.statusText,
+      10,
+    );
+
+    if (plant.status === 'due_today') {
+      return t('home.waterTodayShort');
+    }
+
+    if (plant.status === 'overdue') {
+      if (!Number.isInteger(days)) {
+        return t('home.wateringLate');
+      }
+
+      if (days === 1) {
+        return t('home.wateringOneDayLate');
+      }
+
+      return t('home.wateringDaysLate', { days });
+    }
+
+    if (!Number.isInteger(days)) {
+      return plant.statusText;
+    }
+
+    if (days === 1) {
+      return t('home.waterTomorrow');
+    }
+
+    return t('home.wateringDaysRemaining', {
+      days,
+    });
+  };
+
   return (
     <>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>
-          내 식물
+          {t('home.myPlants')}
         </Text>
 
         <Text style={styles.plantCount}>
-          {plants.length}개
+          {plants.length === 1
+            ? t('home.plantCountOne')
+            : t('home.plantCount', {
+                count: plants.length,
+              })}
         </Text>
       </View>
 
@@ -70,33 +132,60 @@ export default function PlantGrid({
           const isOverdue =
             plant.status === 'overdue';
 
+          const stableVisualIndex = Math.abs(
+            plant.id,
+          );
+          const blobShape =
+            BLOB_SHAPES[
+              stableVisualIndex % BLOB_SHAPES.length
+            ];
+          const blobColors = [
+            theme.colors.primaryFaint,
+            theme.colors.surfaceWarm,
+            theme.colors.surfaceSoft,
+            theme.colors.primarySoft,
+          ];
+          const blobColor =
+            blobColors[
+              stableVisualIndex % blobColors.length
+            ];
+
           return (
             <Pressable
               key={plant.id}
               accessibilityRole="button"
-              accessibilityLabel={
-                `${plant.name} 상세 정보 열기`
-              }
+              accessibilityLabel={t(
+                'home.openPlant',
+                { name: plant.name },
+              )}
               onPress={() =>
                 router.push(`/plant/${plant.id}`)
               }
               style={({ pressed }) => [
                 styles.plantItem,
-                pressed && styles.plantItemPressed,
+                pressed &&
+                  styles.plantItemPressed,
               ]}
             >
               <View
                 style={[
-                  styles.plantCircle,
-                  isDueToday &&
-                    styles.dueTodayCircle,
-                  isOverdue &&
-                    styles.overdueCircle,
+                  styles.thumbnailBlob,
+                  blobShape,
+                  { backgroundColor: blobColor },
                 ]}
               >
-                <Text style={styles.plantEmoji}>
-                  {plant.emoji}
-                </Text>
+                <PlantVisual
+                  emoji={plant.emoji}
+                  imageSource={getPlantIllustration(
+                    plant.imageKey,
+                  )}
+                  size="small"
+                  backgroundColor={
+                    theme.colors.transparent
+                  }
+                  style={styles.thumbnailVisual}
+                  imageStyle={styles.thumbnailImage}
+                />
               </View>
 
               <Text
@@ -104,6 +193,22 @@ export default function PlantGrid({
                 style={styles.plantName}
               >
                 {plant.name}
+              </Text>
+
+              {plant.locationName ? (
+                <Text
+                  numberOfLines={1}
+                  style={styles.locationChip}
+                >
+                  {plant.locationName}
+                </Text>
+              ) : null}
+
+              <Text
+                numberOfLines={1}
+                style={styles.plantType}
+              >
+                {plant.typeName}
               </Text>
 
               <Text
@@ -124,28 +229,34 @@ export default function PlantGrid({
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="새 식물 추가"
+          accessibilityLabel={t(
+            'home.addPlantAccessibility',
+          )}
           onPress={onAddPlant}
           style={({ pressed }) => [
             styles.plantItem,
-            pressed && styles.addItemPressed,
+            pressed &&
+              styles.addItemPressed,
           ]}
         >
           <View
+            ref={addPlantRef}
             style={[
-              styles.plantCircle,
+              styles.addVisual,
               styles.addCircle,
             ]}
           >
-            <Text style={styles.addIcon}>＋</Text>
+            <Text style={styles.addIcon}>
+              ＋
+            </Text>
           </View>
 
           <Text style={styles.plantName}>
-            식물 추가
+            {t('home.addPlant')}
           </Text>
 
           <Text style={styles.plantStatus}>
-            새 화분
+            {t('home.newPot')}
           </Text>
         </Pressable>
       </View>
@@ -153,112 +264,146 @@ export default function PlantGrid({
   );
 }
 
-const styles = StyleSheet.create({
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 36,
-  },
+function createStyles(theme: AppTheme) {
+  const {
+    colors,
+    spacing,
+    radius,
+    fontSize,
+    fontWeight,
+  } = theme;
 
-  sectionTitle: {
-    color: '#283526',
-    fontSize: 19,
-    fontWeight: '800',
-  },
+  return StyleSheet.create({
+    sectionHeader: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.xxxl,
+    },
 
-  plantCount: {
-    color: '#75806F',
-    fontSize: 14,
-    fontWeight: '700',
-  },
+    sectionTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.sectionTitle,
+      fontWeight: fontWeight.extraBold,
+    },
 
-  plantRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -6,
-    marginTop: 15,
-  },
+    plantCount: {
+      color: colors.textSecondary,
+      fontSize: fontSize.bodySmall,
+      fontWeight: fontWeight.bold,
+    },
 
-  plantItem: {
-    width: '25%',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 6,
-  },
+    plantRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: -6,
+      marginTop: spacing.lg,
+    },
 
-  plantItemPressed: {
-    opacity: 0.65,
-  },
+    plantItem: {
+      width: '25%',
+      alignItems: 'center',
+      marginBottom: spacing.xl,
+      paddingHorizontal: 6,
+    },
 
-  plantCircle: {
-    width: 70,
-    height: 70,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 35,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
+    plantItemPressed: {
+      opacity: 0.65,
+    },
 
-  dueTodayCircle: {
-    backgroundColor: '#EEF6E8',
-    borderColor: '#89A67F',
-  },
+    thumbnailBlob: {
+      width: 70,
+      height: 70,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  overdueCircle: {
-    backgroundColor: '#FFF2ED',
-    borderColor: '#C67A6E',
-  },
+    thumbnailVisual: {
+      width: 74,
+      height: 74,
+      overflow: 'visible',
+    },
 
-  plantEmoji: {
-    fontSize: 35,
-  },
+    thumbnailImage: {
+      width: '100%',
+      height: '100%',
+      transform: [
+        { scale: 1.32 },
+      ],
+    },
 
-  plantName: {
-    width: '100%',
-    color: '#344032',
-    fontSize: 13,
-    fontWeight: '800',
-    marginTop: 9,
-    textAlign: 'center',
-  },
+    addVisual: {
+      width: 70,
+      height: 70,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radius.circle,
+    },
 
-  plantStatus: {
-    width: '100%',
-    minHeight: 28,
-    color: '#879081',
-    fontSize: 11,
-    lineHeight: 14,
-    marginTop: 3,
-    textAlign: 'center',
-  },
+    plantName: {
+      width: '100%',
+      color: colors.textPrimary,
+      fontSize: 13,
+      fontWeight: fontWeight.extraBold,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
 
-  dueTodayStatus: {
-    color: '#48683F',
-    fontWeight: '800',
-  },
+    plantStatus: {
+      width: '100%',
+      color: colors.textSecondary,
+      fontSize: 11,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+    },
 
-  overdueStatus: {
-    color: '#A34F42',
-    fontWeight: '800',
-  },
+    plantType: {
+      width: '100%',
+      color: colors.textSecondary,
+      fontSize: 10,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+    },
 
-  addCircle: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: '#B8C3B2',
-    borderStyle: 'dashed',
-  },
+    locationChip: {
+      maxWidth: '100%',
+      backgroundColor: colors.primaryFaint,
+      borderRadius: radius.pill,
+      color: colors.primary,
+      fontSize: 9,
+      fontWeight: fontWeight.bold,
+      marginTop: spacing.xs,
+      overflow: 'hidden',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      textAlign: 'center',
+    },
 
-  addIcon: {
-    color: '#65745F',
-    fontSize: 30,
-    fontWeight: '400',
-  },
+    dueTodayStatus: {
+      color: colors.statusToday,
+      fontWeight: fontWeight.bold,
+    },
 
-  addItemPressed: {
-    opacity: 0.65,
-  },
-});
+    overdueStatus: {
+      color: colors.statusOverdue,
+      fontWeight: fontWeight.bold,
+    },
+
+    addCircle: {
+      backgroundColor: colors.transparent,
+      borderColor: colors.borderStrong,
+      borderStyle: 'dashed',
+      borderWidth: 1.5,
+    },
+
+    addIcon: {
+      color: colors.primary,
+      fontSize: 30,
+      fontWeight: fontWeight.regular,
+    },
+
+    addItemPressed: {
+      opacity: 0.65,
+    },
+  });
+}

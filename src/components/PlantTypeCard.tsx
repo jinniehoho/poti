@@ -1,4 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
+
+import { useLanguage } from '../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../theme';
+import FormSectionHeader from './FormSectionHeader';
 
 export type PlantTypeOption = {
   id: number;
@@ -12,24 +21,28 @@ type PlantTypeCardProps = {
   options: PlantTypeOption[];
   selectedPlantTypeId: number | null;
   onSelectPlantType: (plantTypeId: number) => void;
+  validationError?: string | null;
 };
 
 export default function PlantTypeCard({
   options,
   selectedPlantTypeId,
   onSelectPlantType,
+  validationError = null,
 }: PlantTypeCardProps) {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <View style={styles.formCard}>
-      <Text style={styles.questionEmoji}>🪴</Text>
-
-      <Text style={styles.questionTitle}>
-        어떤 식물인가요?
-      </Text>
-
-      <Text style={styles.questionDescription}>
-        식물 종류를 선택하면 기본 물주기 주기를 추천해드려요.
-      </Text>
+      <FormSectionHeader
+        description={t('addPlant.selectSpeciesDescription')}
+        title={t('addPlant.selectSpecies')}
+      />
 
       <View style={styles.optionList}>
         {options.map((option) => {
@@ -69,35 +82,26 @@ export default function PlantTypeCard({
           );
         })}
       </View>
+
+      {validationError && (
+        <Text style={styles.validationError}>
+          {validationError}
+        </Text>
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors } = theme;
+
+  return StyleSheet.create({
   formCard: {
-    backgroundColor: '#F3EDE3',
+    backgroundColor: colors.surfaceWarm,
     borderRadius: 20,
     marginTop: 20,
     paddingHorizontal: 22,
-    paddingVertical: 28,
-  },
-
-  questionEmoji: {
-    fontSize: 38,
-  },
-
-  questionTitle: {
-    color: '#263125',
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 14,
-  },
-
-  questionDescription: {
-    color: '#747B70',
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 7,
+    paddingVertical: 22,
   },
 
   optionList: {
@@ -107,17 +111,17 @@ const styles = StyleSheet.create({
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFDF8',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#DED8CC',
+    borderColor: colors.border,
     borderRadius: 14,
     marginBottom: 10,
     padding: 14,
   },
 
   optionItemSelected: {
-    backgroundColor: '#EDF2E8',
-    borderColor: '#6E7D68',
+    backgroundColor: colors.primaryFaint,
+    borderColor: colors.primary,
     borderWidth: 2,
   },
 
@@ -130,7 +134,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 48,
     height: 48,
-    backgroundColor: '#F6F6EF',
+    backgroundColor: colors.background,
     borderRadius: 12,
   },
 
@@ -144,13 +148,13 @@ const styles = StyleSheet.create({
   },
 
   optionName: {
-    color: '#263125',
+    color: colors.textPrimary,
     fontSize: 15,
     fontWeight: '800',
   },
 
   optionScientificName: {
-    color: '#858B81',
+    color: colors.textMuted,
     fontSize: 12,
     fontStyle: 'italic',
     marginTop: 4,
@@ -162,19 +166,27 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderWidth: 2,
-    borderColor: '#B7BCAF',
+    borderColor: colors.borderStrong,
     borderRadius: 11,
     marginLeft: 10,
   },
 
   radioOuterSelected: {
-    borderColor: '#5C6B57',
+    borderColor: colors.primary,
   },
 
   radioInner: {
     width: 10,
     height: 10,
-    backgroundColor: '#5C6B57',
+    backgroundColor: colors.primary,
     borderRadius: 5,
   },
-});
+
+  validationError: {
+    color: colors.danger,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
+  });
+}

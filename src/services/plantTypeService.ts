@@ -1,5 +1,6 @@
 import type { PlantTypeOption } from '../components/PlantTypeCard';
 import { supabase } from '../lib/supabase';
+import type { AppLanguage } from '../preferences/LanguageContext';
 
 type PlantTypeRow = {
   id: number;
@@ -11,7 +12,9 @@ type PlantTypeRow = {
   }[];
 };
 
-export async function getPlantTypes(): Promise<PlantTypeOption[]> {
+export async function getPlantTypes(
+  language: AppLanguage,
+): Promise<PlantTypeOption[]> {
   const { data, error } = await supabase
     .from('plant_types')
     .select(`
@@ -23,7 +26,10 @@ export async function getPlantTypes(): Promise<PlantTypeOption[]> {
         name
       )
     `)
-    .eq('plant_type_translations.language_code', 'ko')
+    .eq(
+      'plant_type_translations.language_code',
+      language,
+    )
     .order('id');
 
   if (error) {

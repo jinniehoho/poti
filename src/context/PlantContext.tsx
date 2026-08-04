@@ -1,12 +1,17 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
 } from 'react';
 
-import { getPlants } from '../services/plantService';
+import { useLanguage } from '../preferences/LanguageContext';
+import {
+  ensureStarterPlant,
+  getPlants,
+} from '../services/plantService';
 import type { Plant } from '../types/plant';
 
 type PlantContextValue = {
@@ -29,33 +34,38 @@ type PlantProviderProps = {
 export function PlantProvider({
   children,
 }: PlantProviderProps) {
+  const { language, t } = useLanguage();
   const [plants, setPlants] = useState<Plant[]>([]);
   const [isLoadingPlants, setIsLoadingPlants] = useState(true);
   const [plantsError, setPlantsError] =
     useState<string | null>(null);
 
-  const refreshPlants = async () => {
+  const refreshPlants = useCallback(async () => {
     try {
       setIsLoadingPlants(true);
       setPlantsError(null);
 
-      const savedPlants = await getPlants();
+      let savedPlants =
+        await getPlants(language);
+
+      if (savedPlants.length === 0) {
+        await ensureStarterPlant(language);
+        savedPlants = await getPlants(language);
+      }
 
       setPlants(savedPlants);
     } catch (error) {
-      console.error('식물 목록 조회 실패:', error);
+      console.error('Plant list query failed:', error);
 
-      setPlantsError(
-        '식물 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
-      );
+      setPlantsError(t('home.plantsError'));
     } finally {
       setIsLoadingPlants(false);
     }
-  };
+  }, [language, t]);
 
   useEffect(() => {
     void refreshPlants();
-  }, []);
+  }, [refreshPlants]);
 
   const addPlant = (plant: Plant) => {
     setPlants((currentPlants) => [
@@ -85,7 +95,7 @@ export function usePlants() {
 
   if (!context) {
     throw new Error(
-      'usePlants는 PlantProvider 안에서 사용해야 합니다.',
+      'usePlants must be used inside PlantProvider.',
     );
   }
 

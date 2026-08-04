@@ -1,68 +1,170 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import { AppText as Text } from '@/theme/Typography';
 
 import {
-  colors,
-  fontSize,
-  spacing,
-} from '../constants/theme';
+  type AppTheme,
+  useTheme,
+} from '../theme';
+import { useLanguage } from '../preferences/LanguageContext';
 
 type BrandHeaderProps = {
   brandName: string;
+  onOpenSettings: () => void;
+  compactBottomSpacing?: boolean;
+  nickname?: string | null;
 };
+
+function SettingsIcon({ color }: { color: string }) {
+  return (
+    <Svg
+      fill="none"
+      height={28}
+      viewBox="0 0 24 24"
+      width={28}
+    >
+      <Path
+        d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"
+        stroke={color}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+      />
+      <Path
+        d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"
+        stroke={color}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+      />
+    </Svg>
+  );
+}
 
 export default function BrandHeader({
   brandName,
+  onOpenSettings,
+  compactBottomSpacing = false,
+  nickname = null,
 }: BrandHeaderProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
-    <View style={styles.header}>
+    <View
+      style={[
+        styles.header,
+        compactBottomSpacing &&
+          styles.compactHeader,
+      ]}
+    >
       <View style={styles.brandRow}>
-        <Text style={styles.brandName}>{brandName}</Text>
-        <Text style={styles.brandLeaf}>🌿</Text>
+        <View style={styles.brandIdentity}>
+          <Text style={styles.brandName}>{brandName}</Text>
+          <Text style={styles.brandLeaf}>🌿</Text>
+        </View>
+
+        <Pressable
+          accessibilityHint={t('home.settingsHint')}
+          accessibilityLabel={t('home.settingsLabel')}
+          accessibilityRole="button"
+          hitSlop={10}
+          onPress={onOpenSettings}
+          style={({ pressed }) => [
+            styles.settingsButton,
+            pressed && styles.settingsButtonPressed,
+          ]}
+        >
+          <SettingsIcon color={theme.colors.textPrimary} />
+        </Pressable>
       </View>
 
-      <Text style={styles.title}>오늘도 잘 자라고 있어요</Text>
+      <Text style={styles.title}>
+        {nickname
+          ? t('home.namedGreeting', { nickname })
+          : t('home.greeting')}
+      </Text>
 
       <Text style={styles.subtitle}>
-        물이 필요한 식물을 확인하고 바로 기록하세요.
+        {t('home.greetingSubtitle')}
       </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    marginBottom: spacing.xxl,
-  },
+function createStyles(theme: AppTheme) {
+  const {
+    colors,
+    fontFamily,
+    fontSize,
+    fontWeight,
+    spacing,
+  } = theme;
 
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
+  return StyleSheet.create({
+    header: {
+      marginBottom: spacing.xxl,
+    },
+    compactHeader: {
+      marginBottom: spacing.xl,
+    },
 
-  brandName: {
-    color: colors.primary,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
+    brandRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
 
-  brandLeaf: {
-    fontSize: 18,
-    marginLeft: spacing.sm,
-  },
+    brandIdentity: {
+      alignItems: 'center',
+      flexDirection: 'row',
+    },
 
-  title: {
-    color: colors.textPrimary,
-    fontSize: fontSize.title,
-    fontWeight: '800',
-    lineHeight: 36,
-  },
+    brandName: {
+      color: colors.textPrimary,
+      fontFamily: fontFamily.brand,
+      fontSize: fontSize.hero,
+      fontWeight: fontWeight.black,
+    },
 
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: fontSize.bodySmall,
-    lineHeight: 22,
-    marginTop: spacing.sm,
-  },
-});
+    brandLeaf: {
+      fontSize: fontSize.cardTitle,
+      marginLeft: spacing.sm,
+    },
+
+    settingsButton: {
+      alignItems: 'center',
+      height: 40,
+      justifyContent: 'center',
+      width: 40,
+    },
+
+    settingsButtonPressed: {
+      opacity: 0.5,
+    },
+
+    title: {
+      color: colors.textPrimary,
+      fontSize: fontSize.title,
+      fontWeight: fontWeight.extraBold,
+      marginTop: spacing.lg,
+    },
+
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: fontSize.bodySmall,
+      lineHeight: 21,
+      marginTop: spacing.sm,
+    },
+  });
+}

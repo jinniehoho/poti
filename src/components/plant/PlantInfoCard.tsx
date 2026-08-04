@@ -1,14 +1,29 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
+import { useLanguage } from '../../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../../theme';
+import TablerIcon, {
+  type TablerIconName,
+} from '../TablerIcon';
 
 type PlantInfoCardProps = {
   intervalDays: number;
   statusLabel: string;
   lastWateredLabel: string;
   nextWateringLabel: string;
+  temperatureMinC: number | null;
+  temperatureMaxC: number | null;
+  humidityMin: number | null;
+  humidityMax: number | null;
+  petToxic: boolean | null;
 };
 
 type InfoRowProps = {
-  icon: string;
+  icon: TablerIconName;
   label: string;
   value: string;
   isLast?: boolean;
@@ -20,6 +35,12 @@ function InfoRow({
   value,
   isLast = false,
 }: InfoRowProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <View
       style={[
@@ -27,7 +48,12 @@ function InfoRow({
         isLast && styles.lastInfoRow,
       ]}
     >
-      <Text style={styles.infoIcon}>{icon}</Text>
+      <View style={styles.infoIcon}>
+        <TablerIcon
+          color={theme.colors.primary}
+          name={icon}
+        />
+      </View>
 
       <View style={styles.infoContent}>
         <Text style={styles.infoLabel}>{label}</Text>
@@ -43,42 +69,98 @@ export default function PlantInfoCard({
   statusLabel,
   lastWateredLabel,
   nextWateringLabel,
+  temperatureMinC,
+  temperatureMaxC,
+  humidityMin,
+  humidityMax,
+  petToxic,
 }: PlantInfoCardProps) {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
+  const rows: Omit<InfoRowProps, 'isLast'>[] = [
+    {
+      icon: 'droplet',
+      label: t('plantDetail.watering'),
+      value: t('plantDetail.wateringEveryDays', {
+        days: intervalDays,
+      }),
+    },
+    {
+      icon: 'leaf',
+      label: t('plantDetail.currentStatus'),
+      value: statusLabel,
+    },
+    {
+      icon: 'bucketDroplet',
+      label: t('plantDetail.lastWatering'),
+      value: lastWateredLabel,
+    },
+    {
+      icon: 'clockEdit',
+      label: t('plantDetail.nextWatering'),
+      value: nextWateringLabel,
+    },
+  ];
+
+  if (
+    temperatureMinC !== null &&
+    temperatureMaxC !== null
+  ) {
+    rows.push({
+      icon: 'temperatureSun',
+      label: t('plantDetail.temperature'),
+      value: `${temperatureMinC}~${temperatureMaxC} °C`,
+    });
+  }
+
+  if (
+    humidityMin !== null &&
+    humidityMax !== null
+  ) {
+    rows.push({
+      icon: 'droplets',
+      label: t('plantDetail.humidity'),
+      value: `${humidityMin}~${humidityMax} %`,
+    });
+  }
+
+  rows.push({
+    icon: 'paw',
+    label: t('plantDetail.petSafety'),
+    value:
+      petToxic === true
+        ? t('plantDetail.petToxic')
+        : petToxic === false
+          ? t('plantDetail.petSafe')
+          : t('plantDetail.noInformation'),
+  });
+
   return (
     <View style={styles.infoCard}>
-      <InfoRow
-        icon="🌞"
-        label="물주기"
-        value={`${intervalDays}일마다`}
-      />
-
-      <InfoRow
-        icon="💧"
-        label="현재 상태"
-        value={statusLabel}
-      />
-
-      <InfoRow
-        icon="🕒"
-        label="마지막 물주기"
-        value={lastWateredLabel}
-      />
-
-      <InfoRow
-        icon="📅"
-        label="다음 물주기"
-        value={nextWateringLabel}
-        isLast
-      />
+      {rows.map((row, index) => (
+        <InfoRow
+          {...row}
+          isLast={index === rows.length - 1}
+          key={row.label}
+        />
+      ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors } = theme;
+
+  return StyleSheet.create({
   infoCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 28,
     padding: 22,
   },
 
@@ -94,9 +176,10 @@ const styles = StyleSheet.create({
 
   infoIcon: {
     width: 34,
-    fontSize: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 16,
-    textAlign: 'center',
   },
 
   infoContent: {
@@ -104,14 +187,15 @@ const styles = StyleSheet.create({
   },
 
   infoLabel: {
-    color: '#8A9584',
+    color: colors.textMuted,
     fontSize: 13,
   },
 
   infoValue: {
-    color: '#283526',
+    color: colors.textPrimary,
     fontSize: 17,
     fontWeight: '700',
     marginTop: 4,
   },
-});
+  });
+}

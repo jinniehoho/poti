@@ -1,10 +1,18 @@
+import { useMemo } from 'react';
 import {
+  Keyboard,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
+import { AppText as Text, AppTextInput as TextInput } from '@/theme/Typography';
+
+import { useLanguage } from '../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../theme';
+import FormSectionHeader from './FormSectionHeader';
 
 export type WateringMode = 'automatic' | 'custom';
 
@@ -14,6 +22,8 @@ type WateringModeCardProps = {
   customDays: string;
   onChangeMode: (mode: WateringMode) => void;
   onChangeCustomDays: (days: string) => void;
+  onCustomInputFocus?: () => void;
+  validationError?: string | null;
 };
 
 export default function WateringModeCard({
@@ -22,25 +32,31 @@ export default function WateringModeCard({
   customDays,
   onChangeMode,
   onChangeCustomDays,
+  onCustomInputFocus = () => {},
+  validationError = null,
 }: WateringModeCardProps) {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
   const isAutomatic = mode === 'automatic';
   const isCustom = mode === 'custom';
 
   return (
     <View style={styles.formCard}>
-      <Text style={styles.questionEmoji}>💧</Text>
-
-      <Text style={styles.questionTitle}>
-        물을 얼마나 자주 줄까요?
-      </Text>
-
-      <Text style={styles.questionDescription}>
-        추천 주기를 사용하거나 직접 물주기 간격을 설정할 수 있어요.
-      </Text>
+      <FormSectionHeader
+        description={t('addPlant.wateringDescription')}
+        title={t('addPlant.wateringTitle')}
+      />
 
       <View style={styles.optionList}>
         <Pressable
-          onPress={() => onChangeMode('automatic')}
+          onPress={() => {
+            Keyboard.dismiss();
+            onChangeMode('automatic');
+          }}
           style={({ pressed }) => [
             styles.optionItem,
             isAutomatic && styles.optionItemSelected,
@@ -48,12 +64,20 @@ export default function WateringModeCard({
           ]}
         >
           <View style={styles.optionTextArea}>
-            <Text style={styles.optionName}>자동 추천</Text>
+            <Text style={styles.optionName}>
+              {t('addPlant.wateringAutomatic')}
+            </Text>
 
             <Text style={styles.optionDescription}>
               {recommendedDays !== null
-                ? `${recommendedDays}일마다 물주기를 추천해요.`
-                : '식물 종류를 선택하면 추천 주기가 표시돼요.'}
+                ? recommendedDays === 1
+                  ? t(
+                      'addPlant.wateringRecommendedOne',
+                    )
+                  : t('addPlant.wateringRecommended', {
+                      days: recommendedDays,
+                    })
+                : t('addPlant.wateringSelectPlant')}
             </Text>
           </View>
 
@@ -76,10 +100,12 @@ export default function WateringModeCard({
           ]}
         >
           <View style={styles.optionTextArea}>
-            <Text style={styles.optionName}>직접 설정</Text>
+            <Text style={styles.optionName}>
+              {t('addPlant.wateringManual')}
+            </Text>
 
             <Text style={styles.optionDescription}>
-              내 환경에 맞는 물주기 간격을 입력할게요.
+              {t('addPlant.wateringManualDescription')}
             </Text>
           </View>
 
@@ -97,7 +123,7 @@ export default function WateringModeCard({
       {isCustom && (
         <View style={styles.customInputArea}>
           <Text style={styles.customInputLabel}>
-            며칠마다 물을 줄까요?
+            {t('addPlant.wateringDaysQuestion')}
           </Text>
 
           <View style={styles.customInputRow}>
@@ -108,45 +134,57 @@ export default function WateringModeCard({
                 onChangeCustomDays(numbersOnly);
               }}
               placeholder="7"
-              placeholderTextColor="#A1A69D"
+              placeholderTextColor={
+                theme.colors.textMuted
+              }
               keyboardType="number-pad"
+              returnKeyType="done"
+              onFocus={onCustomInputFocus}
+              onSubmitEditing={Keyboard.dismiss}
               maxLength={3}
               style={styles.customInput}
             />
 
-            <Text style={styles.daysText}>일마다</Text>
+            <Text style={styles.daysText}>
+              {t('addPlant.wateringDaysUnit')}
+            </Text>
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={Keyboard.dismiss}
+              style={({ pressed }) => [
+                styles.doneButton,
+                pressed && styles.doneButtonPressed,
+              ]}
+            >
+              <Text style={styles.doneButtonText}>
+                {t('common.done')}
+              </Text>
+            </Pressable>
           </View>
+
         </View>
+      )}
+
+      {validationError && (
+        <Text style={styles.validationError}>
+          {validationError}
+        </Text>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors } = theme;
+
+  return StyleSheet.create({
   formCard: {
-    backgroundColor: '#F3EDE3',
+    backgroundColor: colors.surfaceWarm,
     borderRadius: 20,
     marginTop: 20,
     paddingHorizontal: 22,
-    paddingVertical: 28,
-  },
-
-  questionEmoji: {
-    fontSize: 38,
-  },
-
-  questionTitle: {
-    color: '#263125',
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 14,
-  },
-
-  questionDescription: {
-    color: '#747B70',
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 7,
+    paddingVertical: 22,
   },
 
   optionList: {
@@ -156,17 +194,17 @@ const styles = StyleSheet.create({
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFDF8',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#DED8CC',
+    borderColor: colors.border,
     borderRadius: 14,
     marginBottom: 10,
     padding: 16,
   },
 
   optionItemSelected: {
-    backgroundColor: '#EDF2E8',
-    borderColor: '#6E7D68',
+    backgroundColor: colors.primaryFaint,
+    borderColor: colors.primary,
     borderWidth: 2,
   },
 
@@ -180,13 +218,13 @@ const styles = StyleSheet.create({
   },
 
   optionName: {
-    color: '#263125',
+    color: colors.textPrimary,
     fontSize: 15,
     fontWeight: '800',
   },
 
   optionDescription: {
-    color: '#858B81',
+    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 5,
@@ -198,30 +236,30 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderWidth: 2,
-    borderColor: '#B7BCAF',
+    borderColor: colors.borderStrong,
     borderRadius: 11,
   },
 
   radioOuterSelected: {
-    borderColor: '#5C6B57',
+    borderColor: colors.primary,
   },
 
   radioInner: {
     width: 10,
     height: 10,
-    backgroundColor: '#5C6B57',
+    backgroundColor: colors.primary,
     borderRadius: 5,
   },
 
   customInputArea: {
-    backgroundColor: '#FFFDF8',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginTop: 4,
     padding: 16,
   },
 
   customInputLabel: {
-    color: '#4F594C',
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -234,11 +272,11 @@ const styles = StyleSheet.create({
 
   customInput: {
     width: 88,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: '#DED8CC',
+    borderColor: colors.border,
     borderRadius: 10,
-    color: '#263125',
+    color: colors.textPrimary,
     fontSize: 17,
     fontWeight: '800',
     paddingHorizontal: 14,
@@ -247,9 +285,35 @@ const styles = StyleSheet.create({
   },
 
   daysText: {
-    color: '#4F594C',
+    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: '700',
     marginLeft: 10,
   },
-});
+
+  doneButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    marginLeft: 'auto',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+
+  doneButtonPressed: {
+    opacity: 0.7,
+  },
+
+  doneButtonText: {
+    color: colors.textInverse,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  validationError: {
+    color: colors.danger,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
+  });
+}

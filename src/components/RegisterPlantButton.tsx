@@ -1,18 +1,35 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
+
+import { useLanguage } from '../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../theme';
 
 type RegisterPlantButtonProps = {
   disabled: boolean;
+  isSubmitting: boolean;
   onPress: () => void;
 };
 
 export default function RegisterPlantButton({
   disabled,
+  isSubmitting,
   onPress,
 }: RegisterPlantButtonProps) {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="식물 등록하기"
+      accessibilityLabel={t('addPlant.save')}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -27,23 +44,28 @@ export default function RegisterPlantButton({
           disabled && styles.buttonTextDisabled,
         ]}
       >
-        식물 등록하기
+        {isSubmitting
+          ? t('addPlant.saving')
+          : t('addPlant.save')}
       </Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors } = theme;
+
+  return StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: '#355E3B',
+    backgroundColor: colors.primary,
     borderRadius: 14,
     marginTop: 24,
     paddingVertical: 17,
   },
 
   buttonDisabled: {
-    backgroundColor: '#D3D7CF',
+    backgroundColor: colors.primaryMuted,
   },
 
   buttonPressed: {
@@ -52,12 +74,13 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '800',
   },
 
   buttonTextDisabled: {
-    color: '#92988E',
+    color: colors.textMuted,
   },
-});
+  });
+}

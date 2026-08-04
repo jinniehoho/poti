@@ -1,4 +1,13 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { AppText as Text, AppTextInput as TextInput } from '@/theme/Typography';
+
+import { useLanguage } from '../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../theme';
+import FormSectionHeader from './FormSectionHeader';
 
 type PlantNameCardProps = {
   plantName: string;
@@ -9,23 +18,25 @@ export default function PlantNameCard({
   plantName,
   onChangePlantName,
 }: PlantNameCardProps) {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <View style={styles.formCard}>
-      <Text style={styles.questionEmoji}>🌱</Text>
-
-      <Text style={styles.questionTitle}>
-        이 식물을 뭐라고 부를까요?
-      </Text>
-
-      <Text style={styles.questionDescription}>
-        구분하기 쉬운 이름이나 애칭을 입력해주세요.
-      </Text>
+      <FormSectionHeader
+        description={t('addPlant.nicknameDescription')}
+        title={t('addPlant.nicknameLabel')}
+      />
 
       <TextInput
         value={plantName}
         onChangeText={onChangePlantName}
-        placeholder="예: 초록이"
-        placeholderTextColor="#A1A69D"
+        placeholder={t('addPlant.nicknamePlaceholder')}
+        placeholderTextColor={theme.colors.textMuted}
         style={styles.input}
         maxLength={30}
         autoCorrect={false}
@@ -33,45 +44,37 @@ export default function PlantNameCard({
       />
 
       <Text style={styles.characterCount}>
-        {plantName.length}/30
+        {t('addPlant.characterCount', {
+          current: plantName.length,
+          maximum: 30,
+        })}
+      </Text>
+
+      <Text style={styles.autoHint}>
+        {t('addPlant.nicknameAutoHint')}
       </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors } = theme;
+
+  return StyleSheet.create({
   formCard: {
-    backgroundColor: '#F3EDE3',
+    backgroundColor: colors.surfaceWarm,
     borderRadius: 20,
-    marginTop: 32,
+    marginTop: 20,
     paddingHorizontal: 22,
-    paddingVertical: 28,
-  },
-
-  questionEmoji: {
-    fontSize: 38,
-  },
-
-  questionTitle: {
-    color: '#263125',
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 14,
-  },
-
-  questionDescription: {
-    color: '#747B70',
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 7,
+    paddingVertical: 22,
   },
 
   input: {
-    backgroundColor: '#FFFDF8',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#DED8CC',
+    borderColor: colors.border,
     borderRadius: 12,
-    color: '#263125',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
     marginTop: 22,
@@ -80,9 +83,17 @@ const styles = StyleSheet.create({
   },
 
   characterCount: {
-    color: '#8E948A',
+    color: colors.textMuted,
     fontSize: 12,
     marginTop: 7,
     textAlign: 'right',
   },
-});
+
+  autoHint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 8,
+  },
+  });
+}

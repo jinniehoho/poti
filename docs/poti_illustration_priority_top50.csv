@@ -1,0 +1,52 @@
+﻿rank,species_id,cultivar_id,한국어 대표명,영어 대표명,학명,사용자 등록/검색 수,KR 보편성,DE 보편성,DB 대표성,최종 점수,선정 이유,권장 파일명
+1,cf4f6745-1c66-4edb-b065-49e19630e7ab,,몬스테라,Monstera,Monstera deliciosa,14 / 미수집,95,95,64,85.1,활성 실등록 14건; 프로젝트 우선순위 100; 덩굴 식물군 대표성,species_cf4f6745-1c66-4edb-b065-49e19630e7ab.webp
+2,1360e75c-9fa0-4a09-bc3e-fc004982e358,,스파티필름,Peace lily,Spathiphyllum wallisii,2 / 미수집,95,94,85,82.9,활성 실등록 2건; 프로젝트 우선순위 98; 꽃 식물군 대표성,species_1360e75c-9fa0-4a09-bc3e-fc004982e358.webp
+3,19635284-6724-4769-95e0-268aae8f56bd,,알로에,Aloe vera,Aloe vera,0 / 미수집,92,91,96,79.2,프로젝트 우선순위 94; 다육 식물군 대표성,species_19635284-6724-4769-95e0-268aae8f56bd.webp
+4,028f6abf-6c1b-41af-a77b-80b9a5e34541,,로즈마리,Rosemary,Salvia rosmarinus,1 / 미수집,90,89,84,77.9,활성 실등록 1건; 프로젝트 우선순위 92; 허브 식물군 대표성,species_028f6abf-6c1b-41af-a77b-80b9a5e34541.webp
+5,f656d646-7f10-41c2-8e27-52fcc3d636fe,,스킨답서스,Pothos,Epipremnum aureum,3 / 미수집,93,92,64,76.4,활성 실등록 3건; 프로젝트 우선순위 95; 덩굴 식물군 대표성,species_f656d646-7f10-41c2-8e27-52fcc3d636fe.webp
+6,60485285-0129-42de-a399-e4cb8690c2ce,,염자,Jade plant,Crassula ovata,0 / 미수집,85,85,96,75.9,프로젝트 우선순위 88; 다육 식물군 대표성,species_60485285-0129-42de-a399-e4cb8690c2ce.webp
+7,b227a911-8a27-411e-92a3-4ef874e7dee9,,산세베리아,Snake Plant,Dracaena trifasciata,4 / 미수집,87,87,66,75.5,활성 실등록 4건; 프로젝트 우선순위 90; 관엽 식물군 대표성,species_b227a911-8a27-411e-92a3-4ef874e7dee9.webp
+8,dedf3b00-c449-4059-be62-4cac87382f32,,테이블야자,Parlor palm,Chamaedorea elegans,0 / 미수집,83,83,96,75.0,프로젝트 우선순위 86; 야자 식물군 대표성,species_dedf3b00-c449-4059-be62-4cac87382f32.webp
+9,2ccdb443-1e9f-4ac4-89c0-c154de8dfae7,,아레카야자,Areca palm,Chrysalidocarpus lutescens,0 / 미수집,83,83,96,74.8,프로젝트 우선순위 85; 야자 식물군 대표성,species_2ccdb443-1e9f-4ac4-89c0-c154de8dfae7.webp
+10,7a540a4b-a51c-4752-a2e4-ab7f44ed8015,,금전수,ZZ plant,Zamioculcas zamiifolia,2 / 미수집,95,95,61,74.7,활성 실등록 2건; 프로젝트 우선순위 99; 관엽 식물군 대표성,species_7a540a4b-a51c-4752-a2e4-ab7f44ed8015.webp
+11,6c3867a6-facd-4977-94ec-90bef8d0c38b,,바질,Basil,Ocimum basilicum,0 / 미수집,91,90,84,74.6,프로젝트 우선순위 93; 허브 식물군 대표성,species_6c3867a6-facd-4977-94ec-90bef8d0c38b.webp
+12,8b1431e4-a943-4783-aa98-732ce54e5f48,,아프리칸 바이올렛,African violet,Streptocarpus ionanthus,0 / 미수집,80,80,90,71.4,프로젝트 우선순위 82; 꽃 식물군 대표성,species_8b1431e4-a943-4783-aa98-732ce54e5f48.webp
+13,110ba3bd-414a-4c38-8fd1-f57a73090ae7,,홍콩야자,Dwarf umbrella tree,Heptapleurum arboricola,2 / 미수집,84,84,66,71.3,활성 실등록 2건; 프로젝트 우선순위 87; 관엽 식물군 대표성,species_110ba3bd-414a-4c38-8fd1-f57a73090ae7.webp
+14,278defb2-cd98-44ac-ae91-f8530477ccd8,,하트리프 필로덴드론,Heartleaf philodendron,Philodendron hederaceum,0 / 미수집,94,93,64,69.2,프로젝트 우선순위 96; 덩굴 식물군 대표성,species_278defb2-cd98-44ac-ae91-f8530477ccd8.webp
+15,c88b88f2-8318-4a4a-9859-8d88ec4a9cf5,,떡갈고무나무,Fiddle-leaf fig,Ficus lyrata,0 / 미수집,92,92,66,69.1,프로젝트 우선순위 97; 관엽 식물군 대표성,species_c88b88f2-8318-4a4a-9859-8d88ec4a9cf5.webp
+16,010f9921-39da-48eb-8421-85f593622a41,,스피어민트,Spearmint,Mentha spicata,0 / 미수집,80,78,84,68.8,프로젝트 우선순위 81; 허브 식물군 대표성,species_010f9921-39da-48eb-8421-85f593622a41.webp
+17,baa28449-0abb-4157-9bf7-80b68d29a31b,,싱고니움,Arrowhead plant,Syngonium podophyllum,0 / 미수집,91,90,67,68.8,프로젝트 우선순위 94; 덩굴 식물군 대표성,species_baa28449-0abb-4157-9bf7-80b68d29a31b.webp
+18,e70f1440-9de4-4447-8664-6bd250bbc998,,접란,Spider plant,Chlorophytum comosum,0 / 미수집,91,91,66,68.5,프로젝트 우선순위 95; 관엽 식물군 대표성,species_e70f1440-9de4-4447-8664-6bd250bbc998.webp
+19,f448c4b0-5af6-47ea-b2df-7389cad631e8,bf4ed65c-ec86-4621-abc1-75f0c3be14c0,핑크 프린세스,Pink Princess,Philodendron erubescens 'Pink Princess',0 / 미수집,83,83,76,68.3,프로젝트 우선순위 88; 덩굴 식물군 대표성; 외형 구분이 뚜렷한 품종,cultivar_bf4ed65c-ec86-4621-abc1-75f0c3be14c0.webp
+20,c4e7fd19-2e55-40a0-8bcd-d68bde2ea9b1,,드라세나 마지나타,Madagascar dragon tree,Dracaena reflexa var. angustifolia,0 / 미수집,90,90,66,68.0,프로젝트 우선순위 93; 관엽 식물군 대표성,species_c4e7fd19-2e55-40a0-8bcd-d68bde2ea9b1.webp
+21,9063da60-528c-4f9b-9fea-b27ede7925eb,,고무나무,Rubber Plant,Ficus elastica,1 / 미수집,82,82,66,67.9,활성 실등록 1건; 프로젝트 우선순위 85; 관엽 식물군 대표성,species_9063da60-528c-4f9b-9fea-b27ede7925eb.webp
+22,401dfc07-ce9b-46d3-859d-ac7a77a1ff55,,행운목,Corn plant,Dracaena fragrans,0 / 미수집,88,88,66,67.2,프로젝트 우선순위 92; 관엽 식물군 대표성,species_401dfc07-ce9b-46d3-859d-ac7a77a1ff55.webp
+23,3a17f780-25ec-40be-be99-e6e46cdfbbeb,536a4ee2-6312-450c-abc1-92f301e380cc,트리오스타,Triostar,Stromanthe thalia 'Triostar',0 / 미수집,80,80,78,67.2,프로젝트 우선순위 84; 관엽 식물군 대표성; 외형 구분이 뚜렷한 품종,cultivar_536a4ee2-6312-450c-abc1-92f301e380cc.webp
+24,fe96fb78-d397-4dea-a5ea-f57d538d5572,,스킨답서스 픽투스,Satin pothos,Scindapsus pictus,0 / 미수집,87,87,67,67.1,프로젝트 우선순위 91; 덩굴 식물군 대표성,species_fe96fb78-d397-4dea-a5ea-f57d538d5572.webp
+25,60f9159d-c804-4565-b2ff-9c886331cc7b,,안스리움,Flamingo flower,Anthurium andraeanum,0 / 미수집,74,74,85,66.8,프로젝트 우선순위 77; 꽃 식물군 대표성,species_60f9159d-c804-4565-b2ff-9c886331cc7b.webp
+26,cf4f6745-1c66-4edb-b065-49e19630e7ab,0428fb77-f0b1-41d9-81bd-f063abfeb509,타이 컨스텔레이션,Thai Constellation,Monstera deliciosa 'Thai Constellation',0 / 미수집,80,79,76,66.2,프로젝트 우선순위 84; 덩굴 식물군 대표성; 외형 구분이 뚜렷한 품종,cultivar_0428fb77-f0b1-41d9-81bd-f063abfeb509.webp
+27,e06cd49e-ae57-4edf-9a3a-8255f4bee4b5,,애플민트,Apple mint,Mentha suaveolens,0 / 미수집,73,73,84,66.0,프로젝트 우선순위 76; 허브 식물군 대표성,species_e06cd49e-ae57-4edf-9a3a-8255f4bee4b5.webp
+28,879c0d06-25fc-40ae-8f65-1df32d872a07,,파키라,Money tree,Pachira aquatica,0 / 미수집,86,86,66,66.0,프로젝트 우선순위 90; 관엽 식물군 대표성,species_879c0d06-25fc-40ae-8f65-1df32d872a07.webp
+29,520f69f9-c61b-456f-a7ec-4eb50f068a2e,,렉스 베고니아,Rex begonia,Begonia rex,0 / 미수집,69,69,90,65.8,프로젝트 우선순위 71; 꽃 식물군 대표성,species_520f69f9-c61b-456f-a7ec-4eb50f068a2e.webp
+30,4c19918e-a7ce-4f7a-8b69-349825a7a372,,에케베리아 엘레간스,Mexican snowball,Echeveria elegans,0 / 미수집,64,64,96,65.7,프로젝트 우선순위 66; 다육 식물군 대표성,species_4c19918e-a7ce-4f7a-8b69-349825a7a372.webp
+31,83a05ed8-5bf9-4871-a4f8-3c28552cf077,,아단소니 몬스테라,Swiss cheese vine,Monstera adansonii,0 / 미수집,86,86,64,65.2,프로젝트 우선순위 89; 덩굴 식물군 대표성,species_83a05ed8-5bf9-4871-a4f8-3c28552cf077.webp
+32,ee13f07e-e19a-458e-8150-17921742cbeb,,칼랑코에,Flaming Katy,Kalanchoe blossfeldiana,0 / 미수집,63,63,96,65.1,프로젝트 우선순위 64; 다육 식물군 대표성,species_ee13f07e-e19a-458e-8150-17921742cbeb.webp
+33,6319b6b2-5700-46af-9b6b-ef39e666f06e,,오레가노,Oregano,Origanum vulgare,0 / 미수집,71,71,84,65.1,프로젝트 우선순위 74; 허브 식물군 대표성,species_6319b6b2-5700-46af-9b6b-ef39e666f06e.webp
+34,fb8a64ee-60fa-417f-bbab-1ef5e629059e,,라피도포라 테트라스페르마,Mini monstera,Rhaphidophora tetrasperma,0 / 미수집,83,83,67,64.9,프로젝트 우선순위 86; 덩굴 식물군 대표성,species_fb8a64ee-60fa-417f-bbab-1ef5e629059e.webp
+35,60a1186f-eb3b-4a87-8292-c674c9d19b09,,호접란,Moon orchid,Phalaenopsis amabilis,0 / 미수집,67,67,90,64.8,프로젝트 우선순위 68; 꽃 식물군 대표성,species_60a1186f-eb3b-4a87-8292-c674c9d19b09.webp
+36,f448c4b0-5af6-47ea-b2df-7389cad631e8,,레드 에메랄드 필로덴드론,Blushing philodendron,Philodendron erubescens,0 / 미수집,85,85,64,64.7,프로젝트 우선순위 88; 덩굴 식물군 대표성,species_f448c4b0-5af6-47ea-b2df-7389cad631e8.webp
+37,d99bbffd-56db-45dd-9e1c-40c82ffb0d15,,타임,Thyme,Thymus vulgaris,0 / 미수집,70,70,84,64.5,프로젝트 우선순위 72; 허브 식물군 대표성,species_d99bbffd-56db-45dd-9e1c-40c82ffb0d15.webp
+38,6cd3b154-0377-493c-bd2f-b67503fa5119,,금호선인장,golden barrel cactus,Kroenleinia grusonii,0 / 미수집,59,59,100,64.4,한·독 검색명·별칭 커버리지; 선인장 식물군 대표성,species_6cd3b154-0377-493c-bd2f-b67503fa5119.webp
+39,76a1ea2e-19f9-4865-9746-df72de4f9d37,,비모란,Moon cactus,Gymnocalycium mihanovichii,0 / 미수집,59,59,100,64.3,프로젝트 우선순위 59; 선인장 식물군 대표성,species_76a1ea2e-19f9-4865-9746-df72de4f9d37.webp
+40,ed8b45be-78ba-48b4-bbbf-20c6712b9405,,하와이무궁화,Chinese hibiscus,Hibiscus rosa-sinensis,0 / 미수집,65,65,90,63.9,프로젝트 우선순위 66; 꽃 식물군 대표성,species_ed8b45be-78ba-48b4-bbbf-20c6712b9405.webp
+41,cd01a15c-48af-4cae-986d-1c78d81fa63e,,아글라오네마,Chinese evergreen,Aglaonema commutatum,0 / 미수집,85,85,61,63.8,프로젝트 우선순위 89; 관엽 식물군 대표성,species_cd01a15c-48af-4cae-986d-1c78d81fa63e.webp
+42,61f86522-c35c-4318-a685-c6e969b03dca,,파슬리,Parsley,Petroselinum crispum,0 / 미수집,68,68,84,63.6,프로젝트 우선순위 70; 허브 식물군 대표성,species_61f86522-c35c-4318-a685-c6e969b03dca.webp
+43,141e2287-1942-483a-ad3a-b83c72b3a666,,백도선,Bunny ears cactus,Opuntia microdasys,0 / 미수집,57,57,100,63.5,프로젝트 우선순위 58; 선인장 식물군 대표성,species_141e2287-1942-483a-ad3a-b83c72b3a666.webp
+44,ed10a220-33ab-4717-a33f-b07640f81f52,,십이지권,Zebra haworthia,Haworthiopsis attenuata,0 / 미수집,59,59,96,63.3,프로젝트 우선순위 60; 다육 식물군 대표성,species_ed10a220-33ab-4717-a33f-b07640f81f52.webp
+45,e94428aa-5c58-4b11-a03e-be4ccd275fbe,,안스리움 클라리네르비움,Velvet cardboard anthurium,Anthurium clarinervium,0 / 미수집,67,67,85,63.2,프로젝트 우선순위 69; 꽃 식물군 대표성,species_e94428aa-5c58-4b11-a03e-be4ccd275fbe.webp
+46,5f1d422b-569e-44f2-9e46-bc1792fb64fa,,덕구리란,Ponytail palm,Beaucarnea recurvata,0 / 미수집,80,80,66,63.2,프로젝트 우선순위 83; 관엽 식물군 대표성,species_5f1d422b-569e-44f2-9e46-bc1792fb64fa.webp
+47,200d2987-4501-4e07-bd14-bf765466bee8,,고수,Coriander,Coriandrum sativum,0 / 미수집,68,68,84,63.1,프로젝트 우선순위 69; 허브 식물군 대표성,species_200d2987-4501-4e07-bd14-bf765466bee8.webp
+48,f1ddda8d-1a07-49ed-923f-8ff1b9e15a1f,,게발선인장,Thanksgiving cactus,Schlumbergera truncata,0 / 미수집,56,56,100,63.1,프로젝트 우선순위 57; 선인장 식물군 대표성,species_f1ddda8d-1a07-49ed-923f-8ff1b9e15a1f.webp
+49,a7a8b8f4-2ac9-4170-984e-be8ae58bf7ed,,수국,Bigleaf hydrangea,Hydrangea macrophylla,0 / 미수집,63,63,90,63.0,프로젝트 우선순위 64; 꽃 식물군 대표성,species_a7a8b8f4-2ac9-4170-984e-be8ae58bf7ed.webp
+50,c7382ca7-4818-42de-83d8-056500663f15,,러브체인,String of hearts,Ceropegia woodii,0 / 미수집,76,75,72,62.8,프로젝트 우선순위 77; 덩굴 식물군 대표성,species_c7382ca7-4818-42de-83d8-056500663f15.webp
+

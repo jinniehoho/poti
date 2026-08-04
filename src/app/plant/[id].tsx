@@ -3,7 +3,11 @@ import {
   Stack,
   useLocalSearchParams,
 } from 'expo-router';
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -11,10 +15,12 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
 
+import AppBackButton from '../../components/AppBackButton';
+import OrganicBackground from '../../components/OrganicBackground';
 import PlantActionButtons from '../../components/plant/PlantActionButtons';
 import PlantDetailHeader from '../../components/plant/PlantDetailHeader';
 import PlantInfoCard from '../../components/plant/PlantInfoCard';
@@ -24,17 +30,29 @@ import {
   getPlantById,
 } from '../../services/plantService';
 import { getWateringHistory } from '../../services/wateringService';
+import { useLanguage } from '../../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../../theme';
 
 type PlantDetail = {
   plant_id: number;
   display_name: string;
   plant_type_name: string;
+  species_scientific_name: string | null;
+  image_key: string | null;
   emoji: string;
   interval_days: number;
   last_watered_at: string | null;
   next_watering_at: string;
   watering_status: 'overdue' | 'due_today' | 'not_due';
   days_until_watering: number;
+  temperature_min_c: number | null;
+  temperature_max_c: number | null;
+  humidity_min: number | null;
+  humidity_max: number | null;
+  pet_toxic: boolean | null;
 };
 
 type WateringHistory = {
@@ -45,6 +63,12 @@ type WateringHistory = {
 export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { refreshPlants } = usePlants();
+  const { language, t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
 
   const [plant, setPlant] = useState<PlantDetail | null>(null);
   const [history, setHistory] = useState<
@@ -61,6 +85,14 @@ export default function PlantDetailScreen() {
   const [deleteError, setDeleteError] =
     useState<string | null>(null);
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   useEffect(() => {
     async function loadPlant() {
       try {
@@ -73,7 +105,10 @@ export default function PlantDetailScreen() {
           throw new Error('잘못된 식물 ID입니다.');
         }
 
-        const result = await getPlantById(plantId);
+        const result = await getPlantById(
+          plantId,
+          language,
+        );
 
         const wateringHistory =
             await getWateringHistory(plantId);
@@ -83,21 +118,28 @@ export default function PlantDetailScreen() {
 
       } catch (error) {
         console.error('식물 상세 조회 실패:', error);
-        setLoadError('식물 정보를 불러오지 못했어요.');
+        setLoadError(t('plantDetail.loadError'));
       } finally {
         setIsLoading(false);
       }
     }
 
     void loadPlant();
-  }, [id]);
+  }, [id, language, t]);
 
   const formatDate = (date: string | null) => {
     if (!date) {
-      return '아직 없음';
+      return t('plantDetail.neverWatered');
     }
 
-    return new Date(date).toLocaleDateString('ko-KR');
+    const locale =
+      language === 'ko'
+        ? 'ko-KR'
+        : language === 'de'
+          ? 'de-DE'
+          : 'en-US';
+
+    return new Date(date).toLocaleDateString(locale);
   };
 
   const formatHistoryDate = (
@@ -111,11 +153,18 @@ export default function PlantDetailScreen() {
     today.toDateString();
 
   if (isToday) {
-    return '오늘';
+    return t('plantDetail.today');
   }
 
+  const locale =
+    language === 'ko'
+      ? 'ko-KR'
+      : language === 'de'
+        ? 'de-DE'
+        : 'en-US';
+
   return historyDate.toLocaleDateString(
-    'ko-KR',
+    locale,
     {
       month: 'long',
       day: 'numeric',
@@ -126,10 +175,14 @@ export default function PlantDetailScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
-        <ActivityIndicator size="large" />
+        <OrganicBackground variant="detail" />
+        <ActivityIndicator
+          color={theme.colors.primary}
+          size="large"
+        />
 
         <Text style={styles.loadingText}>
-          식물 정보를 불러오고 있어요...
+          {t('plantDetail.loading')}
         </Text>
       </SafeAreaView>
     );
@@ -138,19 +191,38 @@ export default function PlantDetailScreen() {
   if (loadError || !plant) {
     return (
       <SafeAreaView style={styles.centeredContainer}>
+        <OrganicBackground variant="detail" />
         <Text style={styles.errorText}>
-          {loadError ?? '식물 정보를 찾을 수 없어요.'}
+          {loadError ?? t('plantDetail.notFound')}
         </Text>
+        <Pressable
+          accessibilityLabel={t('common.back')}
+          accessibilityRole="button"
+          onPress={handleBack}
+          style={styles.errorBackButton}
+        >
+          <Text style={styles.errorBackButtonText}>
+            {t('common.back')}
+          </Text>
+        </Pressable>
       </SafeAreaView>
     );
   }
 
   const statusLabel =
     plant.watering_status === 'due_today'
-      ? '오늘 물 주는 날'
+      ? t('plantDetail.dueToday')
       : plant.watering_status === 'overdue'
-        ? `${Math.abs(plant.days_until_watering)}일 지났어요`
-        : `${plant.days_until_watering}일 후`;
+        ? Math.abs(plant.days_until_watering) === 1
+          ? t('plantDetail.overdueOneDay')
+          : t('plantDetail.overdueDays', {
+              days: Math.abs(plant.days_until_watering),
+            })
+        : plant.days_until_watering === 1
+          ? t('plantDetail.dueInOneDay')
+          : t('plantDetail.dueInDays', {
+              days: plant.days_until_watering,
+            });
 
   const handleEdit = () => {
     router.push(`/plant/edit/${plant.plant_id}`);
@@ -188,7 +260,7 @@ export default function PlantDetailScreen() {
       console.error('식물 삭제 실패:', error);
 
       setDeleteError(
-        '식물을 삭제하지 못했어요. 잠시 후 다시 시도해주세요.',
+        t('plantDetail.deleteError'),
       );
     } finally {
       setIsDeleting(false);
@@ -197,9 +269,10 @@ export default function PlantDetailScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      <OrganicBackground variant="detail" />
       <Stack.Screen
         options={{
-          title: '식물 정보',
+          title: t('plantDetail.title'),
         }}
       />
 
@@ -207,27 +280,38 @@ export default function PlantDetailScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <AppBackButton onPress={handleBack} />
+
         <PlantDetailHeader
           emoji={plant.emoji}
           name={plant.display_name}
           typeName={plant.plant_type_name}
+          scientificName={plant.species_scientific_name}
+          imageKey={plant.image_key}
         />
 
-        <PlantInfoCard
-          intervalDays={plant.interval_days}
-          statusLabel={statusLabel}
-          lastWateredLabel={formatDate(plant.last_watered_at)}
-          nextWateringLabel={formatDate(plant.next_watering_at)}
-        />
+        <View style={styles.infoCardOverlap}>
+          <PlantInfoCard
+            intervalDays={plant.interval_days}
+            statusLabel={statusLabel}
+            lastWateredLabel={formatDate(plant.last_watered_at)}
+            nextWateringLabel={formatDate(plant.next_watering_at)}
+            temperatureMinC={plant.temperature_min_c}
+            temperatureMaxC={plant.temperature_max_c}
+            humidityMin={plant.humidity_min}
+            humidityMax={plant.humidity_max}
+            petToxic={plant.pet_toxic}
+          />
+        </View>
         
         <View style={styles.historyCard}>
   <Text style={styles.historyTitle}>
-    최근 물 준 기록
+    {t('plantDetail.historyTitle')}
   </Text>
 
   {history.length === 0 ? (
     <Text style={styles.historyEmpty}>
-      아직 물 준 기록이 없어요.
+      {t('plantDetail.historyEmpty')}
     </Text>
   ) : (
     history.slice(0, 5).map((item) => (
@@ -264,12 +348,13 @@ export default function PlantDetailScreen() {
             <Text style={styles.modalEmoji}>🪴</Text>
 
             <Text style={styles.modalTitle}>
-              {plant.display_name}을(를) 삭제할까요?
+              {t('plantDetail.deleteConfirmTitle', {
+                name: plant.display_name,
+              })}
             </Text>
 
             <Text style={styles.modalDescription}>
-              삭제하면 홈 화면과 물주기 목록에서 더 이상
-              표시되지 않아요.
+              {t('plantDetail.deleteConfirmDescription')}
             </Text>
 
             {deleteError && (
@@ -291,8 +376,8 @@ export default function PlantDetailScreen() {
             >
               <Text style={styles.confirmDeleteButtonText}>
                 {isDeleting
-                  ? '삭제하고 있어요...'
-                  : '삭제하기'}
+                  ? t('plantDetail.deleting')
+                  : t('plantDetail.deleteAction')}
               </Text>
             </Pressable>
 
@@ -307,7 +392,7 @@ export default function PlantDetailScreen() {
               ]}
             >
               <Text style={styles.cancelButtonText}>
-                취소
+                {t('plantDetail.cancel')}
               </Text>
             </Pressable>
           </View>
@@ -317,56 +402,88 @@ export default function PlantDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const {
+    colors,
+    fontSize,
+    fontWeight,
+    layout,
+    radius,
+    spacing,
+  } = theme;
+
+  return StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F5F7F2',
+    backgroundColor: colors.background,
   },
 
   content: {
     width: '100%',
-    maxWidth: 560,
+    maxWidth: layout.contentMaxWidth,
     alignSelf: 'center',
-    paddingHorizontal: 22,
-    paddingTop: 36,
-    paddingBottom: 48,
+    paddingBottom: spacing.xxxl,
+    paddingHorizontal: spacing.screenHorizontal,
+    paddingTop: spacing.xxl,
   },
 
   centeredContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F7F2',
-    paddingHorizontal: 22,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.screenHorizontal,
   },
 
   loadingText: {
-    color: '#747B70',
-    fontSize: 14,
-    marginTop: 12,
+    color: colors.textSecondary,
+    fontSize: fontSize.bodySmall,
+    marginTop: spacing.md,
   },
 
   errorText: {
-    color: '#A34F42',
+    color: colors.danger,
     fontSize: 15,
     textAlign: 'center',
+  },
+
+  errorBackButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.xl,
+  },
+
+  errorBackButtonText: {
+    color: colors.textInverse,
+    fontSize: 15,
+    fontWeight: fontWeight.bold,
+  },
+
+  infoCardOverlap: {
+    marginTop: -44,
+    position: 'relative',
+    zIndex: 2,
   },
 
   modalOverlay: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(27, 39, 25, 0.42)',
-    paddingHorizontal: 22,
+    backgroundColor: colors.overlay,
+    paddingHorizontal: spacing.screenHorizontal,
   },
 
   modalCard: {
     width: '100%',
     maxWidth: 420,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingHorizontal: 24,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.xl,
     paddingVertical: 28,
   },
 
@@ -375,16 +492,16 @@ const styles = StyleSheet.create({
   },
 
   modalTitle: {
-    color: '#263125',
+    color: colors.textPrimary,
     fontSize: 21,
-    fontWeight: '800',
+    fontWeight: fontWeight.extraBold,
     marginTop: 14,
     textAlign: 'center',
   },
 
   modalDescription: {
-    color: '#747B70',
-    fontSize: 14,
+    color: colors.textSecondary,
+    fontSize: fontSize.bodySmall,
     lineHeight: 21,
     marginTop: 10,
     textAlign: 'center',
@@ -392,10 +509,10 @@ const styles = StyleSheet.create({
 
   deleteError: {
     width: '100%',
-    backgroundColor: '#F8E8E4',
-    borderRadius: 12,
-    color: '#A34F42',
-    fontSize: 14,
+    backgroundColor: colors.dangerSoft,
+    borderRadius: radius.md,
+    color: colors.danger,
+    fontSize: fontSize.bodySmall,
     lineHeight: 20,
     marginTop: 18,
     padding: 13,
@@ -405,32 +522,32 @@ const styles = StyleSheet.create({
   confirmDeleteButton: {
     width: '100%',
     alignItems: 'center',
-    backgroundColor: '#A75549',
-    borderRadius: 16,
-    marginTop: 24,
+    backgroundColor: colors.danger,
+    borderRadius: radius.lg,
+    marginTop: spacing.xl,
     paddingVertical: 15,
   },
 
   confirmDeleteButtonText: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: fontWeight.extraBold,
   },
 
   cancelButton: {
     width: '100%',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D7DDD2',
-    borderRadius: 16,
-    marginTop: 12,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    marginTop: spacing.md,
     paddingVertical: 15,
   },
 
   cancelButtonText: {
-    color: '#5F695B',
+    color: colors.textSecondary,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: fontWeight.bold,
   },
 
   disabledButton: {
@@ -442,38 +559,39 @@ const styles = StyleSheet.create({
   },
 
   historyCard: {
-  backgroundColor: '#FFFFFF',
-  borderRadius: 24,
-  marginTop: 20,
-  padding: 22,
-},
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.xl,
+    marginTop: 20,
+    padding: spacing.screenHorizontal,
+  },
 
-historyTitle: {
-  color: '#263125',
-  fontSize: 18,
-  fontWeight: '800',
-},
+  historyTitle: {
+    color: colors.textPrimary,
+    fontSize: 18,
+    fontWeight: fontWeight.extraBold,
+  },
 
-historyEmpty: {
-  color: '#8A9384',
-  fontSize: 14,
-  marginTop: 16,
-},
+  historyEmpty: {
+    color: colors.textMuted,
+    fontSize: fontSize.bodySmall,
+    marginTop: spacing.lg,
+  },
 
-historyRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginTop: 16,
-},
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
 
-historyEmoji: {
-  fontSize: 18,
-},
+  historyEmoji: {
+    fontSize: 18,
+  },
 
-historyDate: {
-  color: '#52654C',
-  fontSize: 15,
-  fontWeight: '700',
-  marginLeft: 10,
-},
-});
+  historyDate: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: fontWeight.bold,
+    marginLeft: 10,
+  },
+  });
+}

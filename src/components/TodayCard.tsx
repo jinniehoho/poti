@@ -1,49 +1,233 @@
 import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
+import {
+  AccessibilityInfo,
+  Animated,
+  type LayoutChangeEvent,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import { AppText as Text } from '@/theme/Typography';
 
+import {
+  useTheme,
+  type AppTheme,
+} from '../theme';
 import type { Plant } from '../types/plant';
+import { useLanguage } from '../preferences/LanguageContext';
+import { getPlantIllustration } from '../../assets/assets';
+
+import PlantVisual from './PlantVisual';
+import TodayProgressBar from './TodayProgressBar';
 
 type TodayCardProps = {
   plant?: Plant;
+  currentTaskNumber: number;
+  totalTaskCount: number;
   onWater: (plant: Plant) => void;
   isWatering: boolean;
+  isCompleted: boolean;
+  completionKey: number;
+  showCompletedEmpty: boolean;
+  waterButtonRef?: RefObject<View | null>;
 };
 
-function getOverdueLabel(statusText: string) {
+function getOverdueDays(statusText: string) {
   const days = Number.parseInt(statusText, 10);
 
-  if (!Number.isInteger(days)) {
-    return '물주기가 늦었어요';
-  }
-
-  if (days === 1) {
-    return '하루 늦었어요';
-  }
-
-  return `${days}일 늦었어요`;
+  return Number.isInteger(days) ? days : null;
 }
 
 export default function TodayCard({
   plant,
+  currentTaskNumber,
+  totalTaskCount,
   onWater,
   isWatering,
+  isCompleted,
+  completionKey,
+  showCompletedEmpty,
+  waterButtonRef,
 }: TodayCardProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+  const completionProgress = useRef(
+    new Animated.Value(0),
+  ).current;
+  const plantScale = useRef(
+    new Animated.Value(1),
+  ).current;
+  const dropProgress = useRef(
+    new Animated.Value(0),
+  ).current;
+  const waveProgress = useRef(
+    new Animated.Value(0),
+  ).current;
+  const waveOpacity = useRef(
+    new Animated.Value(0),
+  ).current;
+  const announcedCompletionKey = useRef(0);
+  const [reduceMotion, setReduceMotion] =
+    useState(false);
+  const [cardSize, setCardSize] = useState({
+    height: 0,
+    width: 0,
+  });
+
+  const handleCardLayout = (
+    event: LayoutChangeEvent,
+  ) => {
+    const { height, width } =
+      event.nativeEvent.layout;
+
+    if (
+      height !== cardSize.height ||
+      width !== cardSize.width
+    ) {
+      setCardSize({ height, width });
+    }
+  };
+
+  useEffect(() => {
+    void AccessibilityInfo.isReduceMotionEnabled().then(
+      setReduceMotion,
+    );
+    const subscription =
+      AccessibilityInfo.addEventListener(
+        'reduceMotionChanged',
+        setReduceMotion,
+      );
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    completionProgress.stopAnimation();
+    plantScale.stopAnimation();
+    dropProgress.stopAnimation();
+    waveProgress.stopAnimation();
+    waveOpacity.stopAnimation();
+    dropProgress.setValue(0);
+    waveProgress.setValue(0);
+    waveOpacity.setValue(0);
+
+    if (!isCompleted) {
+      completionProgress.setValue(0);
+      plantScale.setValue(1);
+      return;
+    }
+
+    if (
+      announcedCompletionKey.current !==
+      completionKey
+    ) {
+      announcedCompletionKey.current =
+        completionKey;
+      AccessibilityInfo.announceForAccessibility(
+        t('home.careToday.watered'),
+      );
+    }
+
+    if (reduceMotion) {
+      completionProgress.setValue(1);
+      plantScale.setValue(1);
+      return;
+    }
+
+    Animated.parallel([
+      Animated.timing(completionProgress, {
+        duration: 360,
+        toValue: 1,
+        useNativeDriver: false,
+      }),
+      Animated.sequence([
+        Animated.timing(dropProgress, {
+          duration: 520,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dropProgress, {
+          duration: 130,
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(waveProgress, {
+            duration: 1350,
+            toValue: 1,
+            useNativeDriver: true,
+          }),
+          Animated.timing(waveOpacity, {
+            duration: 160,
+            toValue: 0.6,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.delay(160),
+        Animated.timing(waveOpacity, {
+          duration: 280,
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.sequence([
+        Animated.delay(1250),
+        Animated.timing(plantScale, {
+          duration: 180,
+          toValue: 1.045,
+          useNativeDriver: true,
+        }),
+        Animated.timing(plantScale, {
+          duration: 240,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [
+    completionKey,
+    completionProgress,
+    dropProgress,
+    isCompleted,
+    plantScale,
+    reduceMotion,
+    t,
+    waveOpacity,
+    waveProgress,
+  ]);
+
   if (!plant) {
     return (
       <View style={styles.emptyCard}>
         <Text style={styles.emptyEmoji}>🌿</Text>
 
         <Text style={styles.emptyTitle}>
-          오늘은 모두 괜찮아요
+          {showCompletedEmpty
+            ? t('home.careToday.complete')
+            : t('home.noPlantsDueTitle')}
         </Text>
 
-        <Text style={styles.emptyText}>
-          지금 바로 물을 줘야 하는 식물이 없어요.
-        </Text>
+        {!showCompletedEmpty && (
+          <Text style={styles.emptyText}>
+            {t('home.noPlantsDueDescription')}
+          </Text>
+        )}
       </View>
     );
   }
@@ -51,30 +235,147 @@ export default function TodayCard({
   const isOverdue = plant.status === 'overdue';
 
   const featuredLabel = isOverdue
-    ? '물을 기다리고 있어요'
-    : '오늘 물을 주세요';
+    ? t('home.waitingForWater')
+    : t('home.waterToday');
 
+  const overdueDays = getOverdueDays(
+    plant.statusText,
+  );
+  const overdueLabel =
+    overdueDays === null
+      ? t('home.wateringLate')
+      : overdueDays === 1
+        ? t('home.wateringOneDayLate')
+        : t('home.wateringDaysLate', {
+            days: overdueDays,
+          });
   const statusLabel = isOverdue
-    ? `⚠️ ${getOverdueLabel(plant.statusText)}`
-    : '오늘 물 주는 날';
+    ? `⚠️ ${overdueLabel}`
+    : null;
+
+  const completedTaskCount = Math.min(
+    totalTaskCount,
+    Math.max(
+      0,
+      currentTaskNumber - 1 +
+        (isCompleted ? 1 : 0),
+    ),
+  );
 
   return (
-    <View
+    <Animated.View
+      onLayout={handleCardLayout}
       style={[
         styles.featuredCard,
         isOverdue && styles.overdueCard,
+        {
+          backgroundColor:
+            completionProgress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [
+                isOverdue
+                  ? theme.colors.dangerSoft
+                  : theme.colors.primaryFaint,
+                theme.colors.completionSurface,
+              ],
+            }),
+        },
       ]}
     >
-      <View
-        style={[
-          styles.featuredIcon,
-          isOverdue && styles.overdueIcon,
-        ]}
+      {isCompleted && !reduceMotion && (
+        <>
+          <Animated.Text
+            style={[
+              styles.waterDrop,
+              {
+                opacity: dropProgress.interpolate({
+                  inputRange: [0, 0.12, 0.82, 1],
+                  outputRange: [0, 1, 0.9, 0],
+                }),
+                transform: [
+                  {
+                    translateY: dropProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 86],
+                    }),
+                  },
+                  {
+                    scale: dropProgress.interpolate({
+                      inputRange: [0, 0.2, 1],
+                      outputRange: [0.86, 1, 1.08],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            💧
+          </Animated.Text>
+
+          {cardSize.height > 0 && cardSize.width > 0 ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.waterWave,
+                {
+                  height: cardSize.height + 24,
+                  width: cardSize.width * 1.16,
+                  opacity: waveOpacity,
+                  transform: [
+                    {
+                      translateX: waveProgress.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [0, -12, 8],
+                      }),
+                    },
+                    {
+                      translateY: waveProgress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [
+                          cardSize.height + 24,
+                          0,
+                        ],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Svg
+                height="100%"
+                preserveAspectRatio="none"
+                viewBox={`0 0 ${cardSize.width * 1.16} ${cardSize.height + 24}`}
+                width="100%"
+              >
+                <Path
+                  d={`M 0 24 C ${cardSize.width * 0.14} 4, ${cardSize.width * 0.3} 44, ${cardSize.width * 0.48} 23 S ${cardSize.width * 0.82} 5, ${cardSize.width * 1.16} 24 V ${cardSize.height + 24} H 0 Z`}
+                  fill={theme.colors.waterDone}
+                />
+              </Svg>
+            </Animated.View>
+          ) : null}
+        </>
+      )}
+
+      <Animated.View
+        style={{
+          transform: [{ scale: plantScale }],
+        }}
       >
-        <Text style={styles.featuredEmoji}>
-          {plant.emoji}
-        </Text>
-      </View>
+        <PlantVisual
+          emoji={plant.emoji}
+          imageSource={getPlantIllustration(
+            plant.imageKey,
+          )}
+          size="medium"
+          backgroundColor={
+            isOverdue
+              ? theme.colors.surface
+              : theme.colors.surfaceElevated
+          }
+          style={styles.featuredVisual}
+        />
+      </Animated.View>
 
       <Text
         style={[
@@ -89,180 +390,248 @@ export default function TodayCard({
         {plant.name}
       </Text>
 
+      {plant.locationName ? (
+        <View style={styles.locationChip}>
+          <Text style={styles.locationChipText}>
+            {plant.locationName}
+          </Text>
+        </View>
+      ) : null}
+
       <Text style={styles.featuredType}>
         {plant.typeName}
       </Text>
 
-      <View
-        style={[
-          styles.statusBadge,
-          isOverdue && styles.overdueBadge,
-        ]}
-      >
-        <Text
+      {totalTaskCount > 0 && (
+        <TodayProgressBar
+          completed={completedTaskCount}
+          total={totalTaskCount}
+        />
+      )}
+
+      {isOverdue && statusLabel ? (
+        <View
           style={[
-            styles.statusBadgeText,
-            isOverdue &&
-              styles.overdueBadgeText,
+            styles.statusBadge,
+            isOverdue && styles.overdueBadge,
           ]}
         >
-          {statusLabel}
-        </Text>
-      </View>
+          <Text
+            style={[
+              styles.statusBadgeText,
+              isOverdue &&
+                styles.overdueBadgeText,
+            ]}
+          >
+            {statusLabel}
+          </Text>
+        </View>
+      ) : null}
 
       <Pressable
+        ref={waterButtonRef}
         accessibilityRole="button"
-        accessibilityLabel={`${plant.name}에게 물주기`}
-        disabled={isWatering}
+        accessibilityLabel={t(
+          'home.waterAccessibility',
+          { name: plant.name },
+        )}
+        disabled={isWatering || isCompleted}
         onPress={() => onWater(plant)}
         style={({ pressed }) => [
           styles.waterButton,
           isOverdue && styles.overdueWaterButton,
-          isWatering && styles.waterButtonDisabled,
+          isCompleted && styles.completedButton,
+          (isWatering || isCompleted) &&
+            styles.waterButtonDisabled,
           pressed &&
             !isWatering &&
+            !isCompleted &&
             styles.waterButtonPressed,
         ]}
       >
         <Text style={styles.waterButtonText}>
-          {isWatering
-            ? '기록하고 있어요...'
-            : '💧 물 줬어요'}
+          {isCompleted
+            ? t('home.careToday.watered')
+            : isWatering
+            ? t('home.recordingWatering')
+            : t('home.careToday.water')}
         </Text>
       </Pressable>
-    </View>
+      {isCompleted && (
+        <Text
+          accessibilityLiveRegion="polite"
+          style={styles.srCompletion}
+        >
+          {t('home.careToday.watered')}
+        </Text>
+      )}
+    </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
-  featuredCard: {
-    alignItems: 'center',
-    backgroundColor: '#DDEBD5',
-    borderRadius: 30,
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 30,
-  },
+function createStyles(theme: AppTheme) {
+  const {
+    colors,
+    fontSize,
+    fontWeight,
+    radius,
+    spacing,
+  } = theme;
 
-  overdueCard: {
-    backgroundColor: '#F3DDD5',
-  },
+  return StyleSheet.create({
+    featuredCard: {
+      alignItems: 'center',
+      backgroundColor: colors.primaryFaint,
+      borderRadius: radius.largeCard,
+      marginTop: spacing.lg,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xxl,
+      overflow: 'hidden',
+    },
 
-  featuredIcon: {
-    width: 112,
-    height: 112,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FBF5',
-    borderRadius: 56,
-    marginBottom: 20,
-  },
+    overdueCard: {
+      backgroundColor: colors.dangerSoft,
+    },
 
-  overdueIcon: {
-    backgroundColor: '#FFF8F4',
-  },
+    featuredVisual: {
+      marginBottom: spacing.xl,
+    },
 
-  featuredEmoji: {
-    fontSize: 58,
-  },
+    featuredLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.bodySmall,
+      fontWeight: fontWeight.bold,
+    },
 
-  featuredLabel: {
-    color: '#65745F',
-    fontSize: 14,
-    fontWeight: '700',
-  },
+    overdueLabel: {
+      color: colors.danger,
+    },
 
-  overdueLabel: {
-    color: '#9A5146',
-  },
+    featuredName: {
+      color: colors.textPrimary,
+      fontSize: 30,
+      fontWeight: fontWeight.black,
+      marginTop: spacing.xs,
+    },
 
-  featuredName: {
-    color: '#20301E',
-    fontSize: 30,
-    fontWeight: '900',
-    marginTop: 5,
-  },
+    featuredType: {
+      color: colors.textSecondary,
+      fontSize: fontSize.bodySmall,
+      marginTop: spacing.xs,
+    },
 
-  featuredType: {
-    color: '#73806E',
-    fontSize: 14,
-    marginTop: 4,
-  },
+    locationChip: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.pill,
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+    },
 
-  statusBadge: {
-    backgroundColor: '#F7FAF4',
-    borderRadius: 999,
-    marginTop: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
+    locationChipText: {
+      color: colors.primary,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.bold,
+    },
 
-  overdueBadge: {
-    backgroundColor: '#FFF5F1',
-  },
+    statusBadge: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.pill,
+      marginTop: spacing.lg,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
 
-  statusBadgeText: {
-    color: '#52654C',
-    fontSize: 13,
-    fontWeight: '800',
-  },
+    overdueBadge: {
+      backgroundColor: colors.dangerSoft,
+    },
 
-  overdueBadgeText: {
-    color: '#A34F42',
-  },
+    statusBadgeText: {
+      color: colors.primary,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.extraBold,
+    },
 
-  waterButton: {
-    width: '100%',
-    alignItems: 'center',
-    backgroundColor: '#355E3B',
-    borderRadius: 18,
-    marginTop: 24,
-    paddingVertical: 16,
-  },
+    overdueBadgeText: {
+      color: colors.danger,
+    },
 
-  overdueWaterButton: {
-    backgroundColor: '#8E493F',
-  },
+    waterButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: radius.lg,
+      marginTop: spacing.xl,
+      paddingVertical: spacing.lg,
+      width: '100%',
+    },
 
-  waterButtonDisabled: {
-    opacity: 0.55,
-  },
+    overdueWaterButton: {
+      backgroundColor: colors.danger,
+    },
 
-  waterButtonPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.99 }],
-  },
+    waterButtonDisabled: {
+      opacity: 0.72,
+    },
+    completedButton: {
+      backgroundColor: colors.waterDone,
+    },
 
-  waterButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-  },
+    waterButtonPressed: {
+      opacity: 0.82,
+      transform: [{ scale: 0.99 }],
+    },
 
-  emptyCard: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    marginTop: 16,
-    padding: 30,
-  },
+    waterButtonText: {
+      color: colors.textInverse,
+      fontSize: fontSize.body,
+      fontWeight: fontWeight.extraBold,
+    },
 
-  emptyEmoji: {
-    fontSize: 46,
-  },
+    emptyCard: {
+      alignItems: 'center',
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: radius.largeCard,
+      marginTop: spacing.lg,
+      padding: spacing.xxl,
+    },
 
-  emptyTitle: {
-    color: '#263324',
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 12,
-  },
+    emptyEmoji: {
+      fontSize: 46,
+    },
 
-  emptyText: {
-    color: '#7B8477',
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 7,
-    textAlign: 'center',
-  },
-});
+    emptyTitle: {
+      color: colors.textPrimary,
+      fontSize: fontSize.cardTitle,
+      fontWeight: fontWeight.extraBold,
+      marginTop: spacing.md,
+    },
+
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.bodySmall,
+      lineHeight: 21,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
+    waterDrop: {
+      fontSize: 26,
+      left: '50%',
+      marginLeft: -13,
+      position: 'absolute',
+      top: 18,
+      zIndex: 3,
+    },
+    waterWave: {
+      bottom: 0,
+      left: '-8%',
+      position: 'absolute',
+      zIndex: 1,
+    },
+    srCompletion: {
+      height: 1,
+      opacity: 0,
+      position: 'absolute',
+      width: 1,
+    },
+  });
+}

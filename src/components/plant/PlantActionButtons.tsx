@@ -1,4 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
+import { useLanguage } from '../../preferences/LanguageContext';
+import {
+  useTheme,
+  type AppTheme,
+} from '../../theme';
 
 type PlantActionButtonsProps = {
   onEdit: () => void;
@@ -9,6 +16,13 @@ export default function PlantActionButtons({
   onEdit,
   onDelete,
 }: PlantActionButtonsProps) {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -20,7 +34,7 @@ export default function PlantActionButtons({
         ]}
       >
         <Text style={styles.editButtonText}>
-          정보 수정
+          {t('plantDetail.edit')}
         </Text>
       </Pressable>
 
@@ -33,14 +47,17 @@ export default function PlantActionButtons({
         ]}
       >
         <Text style={styles.deleteButtonText}>
-          식물 삭제
+          {t('plantDetail.delete')}
         </Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors } = theme;
+
+  return StyleSheet.create({
   container: {
     width: '100%',
   },
@@ -48,14 +65,14 @@ const styles = StyleSheet.create({
   editButton: {
     width: '100%',
     alignItems: 'center',
-    backgroundColor: '#355E3B',
+    backgroundColor: colors.primary,
     borderRadius: 18,
     marginTop: 26,
     paddingVertical: 16,
   },
 
   editButtonText: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -64,14 +81,14 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D7DDD2',
+    borderColor: colors.border,
     borderRadius: 18,
     marginTop: 14,
     paddingVertical: 16,
   },
 
   deleteButtonText: {
-    color: '#6B7566',
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -79,4 +96,5 @@ const styles = StyleSheet.create({
   pressedButton: {
     opacity: 0.7,
   },
-});
+  });
+}

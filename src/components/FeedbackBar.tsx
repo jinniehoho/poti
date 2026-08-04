@@ -1,11 +1,16 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { AppText as Text } from '@/theme/Typography';
 
 import {
-  colors,
-  fontSize,
-  radius,
-  spacing,
-} from '../constants/theme';
+  useTheme,
+  type AppTheme,
+} from '../theme';
+import { useLanguage } from '../preferences/LanguageContext';
 
 type FeedbackBarProps = {
   message: string;
@@ -18,42 +23,82 @@ export default function FeedbackBar({
   showUndo,
   onUndo,
 }: FeedbackBarProps) {
+  const { theme } = useTheme();
+  const { t } = useLanguage();
+
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.message}>{message}</Text>
+      <Text style={styles.message}>
+        {message}
+      </Text>
 
       {showUndo && (
-        <Pressable onPress={onUndo}>
-          <Text style={styles.undoText}>실행 취소</Text>
+        <Pressable
+          onPress={onUndo}
+          style={styles.undoButton}
+        >
+          <Text style={styles.undoText}>
+            {t('home.undo')}
+          </Text>
         </Pressable>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.textPrimary,
-    borderRadius: radius.md,
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
+function createStyles(theme: AppTheme) {
+  const {
+    colors,
+    fontSize,
+    fontWeight,
+    radius,
+    shadows,
+    spacing,
+  } = theme;
 
-  message: {
-    flex: 1,
-    color: colors.white,
-    fontSize: fontSize.bodySmall,
-    fontWeight: '600',
-  },
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
 
-  undoText: {
-    color: colors.statusToday,
-    fontSize: fontSize.bodySmall,
-    fontWeight: '800',
-    marginLeft: spacing.lg,
-  },
-});
+      backgroundColor: colors.surfaceElevated,
+
+      borderRadius: radius.card,
+
+      marginTop: spacing.lg,
+
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+
+      ...shadows.card,
+    },
+
+    message: {
+      flex: 1,
+
+      color: colors.textPrimary,
+
+      fontSize: fontSize.bodySmall,
+
+      lineHeight: 20,
+    },
+
+    undoButton: {
+      marginLeft: spacing.md,
+    },
+
+    undoText: {
+      color: colors.primary,
+
+      fontSize: fontSize.body,
+
+      fontWeight: fontWeight.extraBold,
+    },
+  });
+}

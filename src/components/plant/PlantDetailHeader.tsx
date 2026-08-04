@@ -1,47 +1,119 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import {
+  StyleSheet,
+  View,
+} from 'react-native';
+import { AppText as Text } from '../../theme/Typography';
+import PlantVisual from '../PlantVisual';
+import { getPlantIllustration } from '../../../assets/assets';
+import {
+  useTheme,
+  type AppTheme,
+} from '../../theme';
 
 type PlantDetailHeaderProps = {
   emoji: string;
   name: string;
   typeName: string;
+  scientificName?: string | null;
+  imageKey?: string | null;
 };
 
 export default function PlantDetailHeader({
   emoji,
   name,
   typeName,
+  scientificName,
+  imageKey,
 }: PlantDetailHeaderProps) {
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () => createStyles(theme),
+    [theme],
+  );
+
   return (
     <View style={styles.header}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <PlantVisual
+        backgroundColor={theme.colors.transparent}
+        emoji={emoji}
+        imageSource={getPlantIllustration(imageKey)}
+        imageStyle={styles.heroImage}
+        size="large"
+        style={styles.heroVisual}
+      />
 
-      <Text style={styles.name}>{name}</Text>
-
-      <Text style={styles.typeName}>{typeName}</Text>
+      <View style={styles.identity}>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.typeName}>{typeName}</Text>
+        {scientificName ? (
+          <Text style={styles.scientificName}>
+            {scientificName}
+          </Text>
+        ) : null}
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(theme: AppTheme) {
+  const { colors, fontSize, fontWeight, spacing } = theme;
+
+  return StyleSheet.create({
   header: {
     alignItems: 'center',
-    marginBottom: 28,
+    height: 270,
+    justifyContent: 'center',
+    position: 'relative',
+    width: '100%',
   },
 
-  emoji: {
-    fontSize: 64,
+  heroVisual: {
+    width: 270,
+    height: 270,
+    backgroundColor: colors.transparent,
+    borderRadius: 0,
+    overflow: 'hidden',
+  },
+
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    transform: [
+      { scale: 1.18 },
+      { translateY: 2 },
+    ],
+  },
+
+  identity: {
+    alignItems: 'flex-start',
+    bottom: 56,
+    left: 22,
+    position: 'absolute',
+    width: '38%',
+    zIndex: 2,
   },
 
   name: {
-    color: '#263125',
-    fontSize: 28,
-    fontWeight: '800',
-    marginTop: 14,
+    color: colors.textPrimary,
+    fontSize: fontSize.title,
+    fontWeight: fontWeight.extraBold,
+    lineHeight: 31,
   },
 
   typeName: {
-    color: '#6B7566',
-    fontSize: 16,
-    marginTop: 6,
+    color: colors.textSecondary,
+    fontSize: fontSize.body,
+    lineHeight: 22,
+    marginTop: spacing.sm,
   },
-});
+
+  scientificName: {
+    color: colors.textMuted,
+    fontSize: fontSize.caption,
+    fontStyle: 'italic',
+    lineHeight: 17,
+    marginTop: spacing.xs,
+  },
+  });
+}
